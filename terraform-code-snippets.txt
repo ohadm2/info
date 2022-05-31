@@ -1,0 +1,42 @@
+provider "aws" {
+    region = "eu-west-1"
+}
+
+resource "aws_subnet" "test-subnet" {
+    vpc_id = aws_vpc.test-vpc.id
+    cidr_block = aws_vpc.test-vpc.cidr_block
+}
+
+resource "aws_vpc" "test-vpc" {
+    cidr_block = "10.0.0.0/16"
+    
+    tags = {
+        Name = "my_test_vpc"
+    }  
+}
+
+resource "aws_default_vpc" "default" {
+    tags = {
+        Name = "Default VPC"
+    }
+}
+
+resource "aws_instance" "test-instance" {
+    ami = "ami-08ca3fed11864d6bb"
+    instance_type = "t2.micro"
+
+    tags = {
+        Name = "my_test_server"
+    }
+    
+}
+
+----------------------------------------------------
+
+resource local_file "myFile" {
+    filename = "/tmp/test.txt"
+    content = "testing ..."
+}
+    
+----------------------------------------------------
+

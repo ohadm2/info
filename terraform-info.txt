@@ -1,0 +1,621 @@
+Terraform
+-------------------------------------------------------------------
+
+General:
+-------------
+
+-> HCL Language
+  -> Short for Hashicorp Configuration Language
+  -> Declarative
+
+-> .tf file extension
+    -> for the terraform scripts
+
+-> .tfvars
+    -> optional - for saving terraform variables
+    
+-> .terraform folder
+    -> where the state and libraries are saved
+
+-> basic project structure:
+  -> main.tf - main settings file, the "root" module
+  -> variables.tf - variables settings file
+  -> outputs.tf - data that we want to output from the project to other systems / modules
+
+-> general process:
+    -> create your project with your needed .tf files
+    -> run 'terraform init' to get pre-required libraries from the net
+    -> run 'terraform plan' to see and verify what is going to happen
+    -> run 'terraform apply' to run your project (and apply the changes)
+
+-> how to install/setup/use
+    -> download the os relevant binary from terraform's site (it's a zip that needs to be extracted and set the 'PATH' env var to its location)
+    -> download and install ms 'vscode'
+    -> download and install the hashicorp terraform plugin from vs code market
+    -> create an empty folder and open it in vs code
+        -> create project files inside ...
+        
+    -> IMPORTANT: terraform supports the HTTP_PROXY variables. note that the variables MUST be CAPITAL otherwise terraform will ignore them!
+
+-> important env vars:
+    -> TF_DATA_DIR
+        -> if set, the default ".terraform" folder will be created in the location mentioned in it
+            -> useful when you want the code and the providers files to be in different location
+                  -> e.g.: 
+                          -> in powershell:                                    
+                                      $env:TF_DATA_DIR="C:\test\test-terraform"
+            
+    -> TF_LOG
+        -> if set, prints debugging info - see ahead for more details
+
+    -> HTTP_PROXY \ HTTPS_PROXY - must be set to use a proxy with terraform
+    
+
+Details:
+----------------------
+
+-> state
+    -> saved in a file called 'terraform.tfstate' automatically
+    -> contains metadata terraform needs to work properly
+    -> we can work with multiple states (using workspaces)
+    -> we can save the state remotely (using backends)
+
+-> syntax related:
+  -> data structures
+      -> list = [
+            elem1,elem2,elem3
+         ]
+      -> map = {
+              key1 = "value1"
+              key2 = "value2"
+         }
+         
+  -> operators
+      -> string interpolation
+        -> needed when connecting 2 expressions together
+        -> syntax: ${expression}
+            -> e.g. "${expression1}-${expression2}"
+
+-> built-in functions
+    -> there are many built-in functions available
+        -> such as:
+              -> upper - convert a string to uppercase
+              -> lower - convert a string to lowercase
+              -> replace - replaces a char in a string
+              -> split
+              -> join
+              -> fileexists
+
+-> locals
+    -> a special kind of variable
+    -> used for code reuse
+        -> for simple 1-to-many string replacements
+            -> e.g. myLocalVar = "myLocalPrefix"
+        -> for simple 1-to-many expression reuses
+            -> e.g. myLocalExpr = upper("myUpperCaseExpr")
+            
+    -> defined using a 'locals block'.
+    -> accessed via the saved word "local" followed by a dot and the defined variable name
+          -> e.g. local.myLocalVar
+       -> if we want to use the local inside a different expression, we need to use the string interpolation operator
+          -> e.g. "${local.myLocalVar}-with-something-else"
+      
+    -> usage example:
+    
+        locals {
+          myLocalVar = "myLocalPrefix"
+        }
+        
+        resource .... {
+            var1 = "${local.myLocalVar}-one"
+            var2 = "${local.myLocalVar}-two"
+            var3 = local.myLocalVar
+        }
+    
+
+-> defines resources that use providers inside code blocks
+    -> can be used with input variables
+
+-> block
+  -> a section of code that defines and uses 
+
+-> resource
+    -> brand new resources can be used later on in other blocks
+
+-> provider
+    -> more than 100 providers
+    -> each provider implements access to a specific resource or a set of resources
+        -> examples:
+          -> local - creates local files
+          -> random - creates random data (numbers, texts etc.)
+          -> aws - manages aws clouds
+          -> bigip - manages f5 appliances
+    -> using specific versions
+      -> sometimes using the latest version (which is the default terraform behavior unless explicitly stated otherwise) will break some code
+          -> this is why we can choose specific providers versions when needed
+      -> it is possible to force a download of a specific provider version via 'terraform init' by creating a 'terraform block' like so:
+      
+      -> e.g. 1 - general structure:
+      
+          terraform {
+              required_providers {
+                  <provider_name> = {
+                      source = <source>
+                      version = <a_specific_version>
+                  }
+              }
+          }
+
+      -> e.g. 2 - use the 'local' provider with a specific version:
+      
+          terraform {
+              required_providers {
+                  local = {
+                      source = "hashicorp/local"
+                      version = "1.4.0"
+                  }
+              }
+          }
+
+      -> e.g. 3 - use the 'local' provider with a range of versions #1:
+      
+          terraform {
+              required_providers {
+                  local = {
+                      source = "hashicorp/local"
+                      version = "> 1.2.0, < 2.0.0, != 1.4.0"
+                  }
+              }
+          }
+
+      -> e.g. 4 - use the 'local' provider with a range of versions #2 - incremental according to the last digit:
+      
+          terraform {
+              required_providers {
+                  local = {
+                      source = "hashicorp/local"
+                      version = "~> 1.2.0" # equals to: 1.2.0 OR 1.2.1 OR 1.2.2, a value of "~> 1.2" will mean: 1.2 OR 1.3 OR 1.4 etc.
+                  }
+              }
+          }
+
+-> variable
+  -> a way of giving input data to a resource block
+  -> create a .tf file called 'variables.tf'
+  -> access variable values inside the rest of your resources using the prefix "var."
+      -> e.g. 
+            
+            variables.tf
+            --------------
+            
+            variable "myVar" {
+                default = "/tmp/myFileName"
+            }
+            
+            main.tf
+           ----------
+           
+           resource local_file "myFile" {
+              filename = var.myVar
+           }
+           
+  -> several types:
+      -> 'string' or 'number' or 'bool' or 'list' or 'set' or 'map' or 'object' or 'tuple' or 'any' (any = default)
+      -> to be used with the directive "type"
+          -> e.g. 
+                -> type = list / type = map
+                  -> a list of strings by default
+                  -> can be forced to a specific primitive type
+                    -> e.g. 
+                         -> type = list(number) / type = map(number) 
+                  
+                    
+      -> see more info below        
+  
+  -> can be passed to "terraform apply" also via:
+      -> argument - terraform apply -var "var = value"
+      -> environment variable:
+          
+          -> export TF_VAR_<var_name>="value"
+
+  -> can be defined as a simple list in a file that ends with ".tfvars"
+      -> e.g.
+        
+          terraform.tfvars
+          ------------------
+          
+          var1 = "value1"
+          var2 = "value2"
+      
+      -> tfvars that will use one of the following naming conventions will be AUTOMATICALLY loaded:
+          -> terraform.tfvars
+          -> terraform.tfvars.json
+          -> *.auto.tfvars
+          -> *.auto.tfvars.json
+      
+      -> other names will need to be mentioned to 'terraform apply' specifically using the switch '-var-file'
+          -> e.g.
+          
+                terraform apply -var-file variables.tfvars
+
+  -> if multiple values were defined for the same variable in different ways simultaneously, the following is the precedence order (from high to low)
+        -> 1) -var or -var-file switches
+        -> 2) *.auto.tfvars or *.auto.tfvars.json files (in alphabetical order)
+        -> 3) terraform.tfvars or terraform.tfvars.json files
+        -> 4) environment variables
+
+-> dependency
+    -> dependencies of other resources can be defined using the following code block:
+    
+        resource ... {
+            
+            depends_on = [
+            
+                resource_type.resource_name
+                
+            ]
+        }
+  
+-> output
+      -> usage:
+        -> 1) used for printing output data to the screen
+        -> 2) used for sending data to external entities such as ansible or shell scripts
+        -> 3) used for sending data to another part of the project (e.g. from a child module to the "root" module ("main.tf"))
+
+    -> output variables can be defined using the following output resource block:
+        
+          output var-name {
+              value = resource_type.resource_name.auto_generated_output_var_name
+              description = "optional description"        
+          }
+          
+          resource my-resource {
+              something = var-name
+          }
+          
+
+-> refresh
+    -> every terraform command (e.g. plan, apply) that uses the state file can be forced not to refresh it by using the switch "-refresh = false"
+    
+-> lifecycle
+    -> a lifecycle block can be used to change the default behavior of a resource lifecycle
+    -> e.g. 1 - create the new resource and only after that destroy the previous:
+    
+        resource ... {
+
+            lifecycle {
+                create_before_destroy = true # the default is the opposite ...
+            }
+        }
+
+    -> e.g. 2 - don't destroy the previous resource:
+    
+        resource ... {
+
+            lifecycle {
+                prevent_destroy = true # the default is the opposite ...
+            }
+        }
+        
+     -> e.g. 3 - don't apply changes to a given list of keys:
+    
+        resource ... {
+
+            lifecycle {
+                ignore_changes = [
+                    <key_name_to_ignore_1>,<key_name_to_ignore_2>
+                ]
+            }
+        }       
+        
+     -> e.g. 4 - don't apply changes to ALL keys:
+     
+        resource ... {
+
+            lifecycle {
+                ignore_changes = all
+            }
+        }       
+        
+        
+    -> lifecycle rules are NOT immune to the 'terraform destroy' command
+
+
+-> data source
+    -> a way of giving terraform access to resources which are not directly controlled by it
+    -> uses a 'data block'.
+    -> e.g.:
+    
+      data "local_file" "myExternalFile" {
+          filename = "/path/to/myExternalFile"
+      }
+    
+    -> all providers known to terraform are supported and can be used as data sources as well
+    
+    -> data resources are READ ONLY objects as they are not managed by terraform
+    
+    -> to reference a data source inside a managed terraform resource, use the following syntax:
+    
+        resource local_file "myFile" {
+            filename = "myFile.txt"
+            content = data.local_file.myExternalFile.content
+        }
+    
+
+-> count
+  -> a way of using a basic loop in terraform
+  -> example:
+  
+        variable "filename" {  
+    
+          default = [
+              "cat", "dog", "frog"
+          ]
+        }
+        
+        resource "local_file" "pet" {
+        
+            filename = var.filename[count.index]
+            
+            count = length(var.filename)
+        }
+
+-> for_each
+    -> a 'for each' loop in terraform
+    -> note that the "for_each" meta argument only works on SETS and not on list so either work with a set or use the function "toset" to convert the list to a set.
+        ->  a set is a list that CANNOT have duplicate values
+    -> example:
+    
+        variable "filename" {  
+    
+          default = [
+              "cat", "dog", "frog"
+          ]
+        }
+        
+        resource "local_file" "pet" {
+        
+            filename = each.value
+            
+            for_each = toset(var.filename)
+        }        
+        
+
+module
+    -> a way of packaging code
+    -> implemented just like the "root" module ("main.tf") using resource blocks, variables and outputs
+        -> add a 'terraform' block inside the module which states which versions of terraform are supported by this module using the param "required_version"
+            -> e.g. 
+                  terraform {
+                        required_version = ">= 0.12"
+                  }                  
+    -> called using a 'module block'
+        -> the only mandatory param that needs to be set inside the module is "source" which will get a path to a directory where all of the module files reside
+            -> if the module requires variables that do not use a default value they must be set inside the module block as well
+    -> modules CAN be nested but the best practice is to use them in a flat matter meaning that they should be used only inside the "root" module ("main.tf") and not inside each other
+    -> don't package a single resource inside a module
+    -> we must run 'terraform init' for any newly created modules
+    -> usage example:
+
+        my-proj-dir/modules/webserver/outputs.tf
+       --------------------------------------------------
+
+       output "instance" {
+          value = aws_instance.webserver
+          description = "webserver contents"
+       }
+        
+        my-proj-dir/modules/webserver/variables.tf
+       --------------------------------------------------
+       
+       variable "vpc_id" {
+          type = string
+          description = "vpc id"
+       }
+
+       variable "cidr_block" {
+          type = string
+          description = "subnet cidr block"
+       }
+
+       variable "webserver_name" {
+          type = string
+          description = "name of the server"
+       }
+
+       variable "ami" {
+          type = string
+          description = "ami to use"
+       }
+
+       variable "instance_type" {
+          type = string
+          description = "instance type"
+          default = "t2.micro"
+       }
+
+       
+        my-proj-dir/modules/webserver/main.tf
+       ---------------------------------------------
+        
+       terraform {
+                      required_version = ">= 0.12"
+       }
+       
+       resource "aws_subnet" "webserver" {
+            vpc_id = var.vpc_id
+            cidr_block = var.cidr_block
+       }
+       
+       resource "aws_instance" "webserver" {
+            ami = var.ami
+            instance_type = var.instance_type
+            subnet_id = aws_subnet.webserver.id
+            
+            tags = {
+                Name = "${var.webserver_name} webserver"
+            }
+       }
+              
+       my-proj-dir/main.tf
+      ----------------------
+      
+      provider "aws" {
+          region = "us-west-2"
+      }
+      
+      resource "aws_vpc" "main" {
+          cidr_block = "10.0.0.0/16"
+ 
+          tags = {
+              Name = "my_webserver_vpc"
+          }          
+      }
+      
+      module "my_webserver" {
+          source = "../modules/webserver"
+          
+          vpc_id = aws_vpc.main.id
+          cidr_block = "10.0.0.0/16"
+          webserver_name = "my-webserver"
+          ami = "ami-<some-id>"
+          instance_type = "t2.medium"
+      }
+      
+       output "instance_data" {
+          value = module.my_webserver.instance
+       }
+      
+
+condition
+    -> setup params based on a condition
+    -> a typical example - create a resource or not based on a condition using the 'count' param:
+        -> count = 0 tells terraform NOT to create the resource AT ALL
+        -> count >= 1 tells terraform to create one or more copies of the resource
+        
+        -> condition example:
+        
+            variable "env" {
+                default = "prod"
+            }
+            
+            resource ... {
+                count = ${var.env == "prod" ? 1 : 0} # ? means "if", after the ? comes the 'if true' code block, after the ':' comes the 'else' code block
+            }
+
+debugging
+    -> create a new environment variable called 'TF_LOG'
+        -> set its value to one of the following:
+            -> TRACE
+            -> DEBUG
+            -> INFO
+            -> WARN
+            -> ERROR
+            -> OFF
+            
+        -> e.g.:
+
+           -> cmd: set TF_LOG=DEBUG
+           -> bash: export TF_LOG=DEBUG
+           -> ps: $env:TF_LOG="DEBUG"
+
+
+
+basic resource block structure:
+------------------------------------
+
+  <resource> <provider_name>_<resource_type> <resource_name_chosen_not_fixed> {
+
+      key1 = value1
+      key2 = value2
+
+  }
+
+  example:
+  -----------
+
+    resource local_file "myFile" {
+        filename = "/tmp/test.txt"
+        content = "testing ..."
+    }
+
+
+basic variable block structure:
+--------------------------------------
+
+  variable "<variable_name_chosen_not_fixed>" {
+
+      **default = "value"
+      **type = ['string' or 'number' or 'bool' or 'list' or 'set' or 'map' or 'object' or 'tuple' or 'any' (any = default)]
+      *description = "an optional text description"
+      
+      * optional
+      ** if a default value is present, it will be used when not specified otherwise
+      ** if only the default param is present and initialized, there is no need to specify the type param as well because it could be inferred from the default value set to the default param
+      ** if only the type param is present, it means that there is no default value for it and that may require the user to init it explicitly
+      
+      list (e.g. myList) = ["cat", "dog", "dog"] , access: var.myList[0] is equal to "cat" - a list can manage data of only one type and can have duplicate values
+      
+      set (e.g. mySet) = ["cat", "dog"] , access: var.mySet[1] is equal to "dog" - a set is a list that CANNOT have duplicate values
+      
+      tuple (e.g. myTuple) = ["cat", 7, true] , access: var.myTuple[2] is equal to true - a tuple is a list that holds several primitive types at once
+      
+      map (e.g. myMap) = { 
+                           "pet1" = "cat"        , access: var.myMap["pet1"]
+                           "pet2" = "dog"       
+                         }
+      
+      object = complex data structure
+  }
+  
+  example:
+  ---------
+  
+  variable "filename" {  
+    
+    default = [
+        "cat", "dog", "frog"
+    ]
+  }
+  
+
+
+object variable example:
+---------------------------
+
+  variable "myObject" {
+
+      type = object ({
+          name = string
+          age = number
+          food = list(string)
+          isAvailable = bool
+      })
+  }
+
+
+tuple variable example:
+---------------------------
+
+  variable "myTuple" {
+
+      type = tuple([string, number, bool])
+      default = ["cat", 7, true]
+  }
+
+
+combining resources together
+---------------------------------
+
+  resource local_file "myFile" {
+      filename = "/tmp/${random_fileName.myRandomFileName.id}"
+      content = "testing ..."
+  }
+  
+  resource random_fileName "myRandomFileName" {
+      prefix = "myRandomFileName_"
+      separator = "."
+      length = "1" # one WORD, not one char
+  }
+  
+  

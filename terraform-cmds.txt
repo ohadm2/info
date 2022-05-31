@@ -1,0 +1,76 @@
+
+-> important env vars:
+    -> TF_DATA_DIR
+        -> if set, the default ".terraform" folder will be created in the location mentioned in it
+            -> useful when you want the code and the providers files to be in different location
+            
+    -> TF_LOG
+        -> if set, prints debugging info - see ahead for more details
+
+    -> HTTP_PROXY \ HTTPS_PROXY - must be set to use a proxy with terraform
+        -> MUST be in CAPITAL letters!
+    
+
+-> general options
+    -> use the switch '-no-color' to be able to save cmds outputs directly to a file without the gibrish generated for bash coloring
+
+
+-> terraform init
+    -> parses the .tf files
+    -> downloads required plugins
+        -> download location: <tf-files-location>/.terraform/plugins
+    -> needed for initializing local modules as well
+
+
+-> terraform plan
+    -> shows a summery of actions that will be made
+
+
+-> terraform apply
+  -> runs .tf files
+  -> auto approve:
+      -> terraform apply -auto-approve
+
+  -> using variables:
+      -> terraform apply -var "var1=one" -var "var2=7"
+  
+
+-> terraform show
+    -> prints the current state
+    -> json format output:
+      -> terraform show -json
+   
+   
+-> terraform destroy
+  -> destroys the current state and resources
+
+
+-> terraform output
+  -> returns output values for outputs defined in the project
+  -> to get one specific variable use:
+        -> terraform output <var-name>
+
+
+-> terraform validate
+  -> validates syntax
+  
+
+-> terraform fmt
+  -> auto indents the terraform files inside the current directory and makes them more readable 
+
+
+-> terraform providers
+   -> shows a list of all providers used in the terraform files inside the current directory
+   -> copy providers to another directory:
+      -> terraform providers mirror /path/to/another/terraform/project
+   
+
+-> terraform refresh
+   -> refreshes the state and rechecks the code
+   
+
+-> terraform graph
+    -> returns a "dot" formatted textual output of the terraform resources
+    -> can be transformed to a graphical output using a tool called 'graphwiz' (available in Linux)
+    
+ 
