@@ -1,0 +1,8 @@
+
+in order to remove networking policies:
+
+1. remove relevant k8s objects
+2. remove relevant files from /etc/cni/net.d from ALL clusters
+3. restart kubelet - service kubelet restart
+
+

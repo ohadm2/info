@@ -1,0 +1,13 @@
+
+Inside the namespace that has the pod which we want to debug:
+
+0. Make sure that a network connection is available between pods inside the namespace.
+1. Deploy a client pod with the needed client networking tools.
+2. Deploy a capturing pod with tcpdump and curl and a connection to the host network.
+3. Run tcpdump -i any -w debug.pcap on the pod that has access to the host network.
+4. Run the problematic requests from the client pod to the pod that we want to debug.
+5. Upload the pcap file to the nexus raw repo.
+6. Get the pcap file from the Nexus server and check it.
+
+
+
