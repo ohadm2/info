@@ -1,0 +1,785 @@
+######################
+# General Notes: 
+######################
+
+1) Usually, all one needs is to trust only the root certificate. Intermediate certificates should be available for download automatically. However, in case of a proxy situation, it is impossible to get the intermediate certificates, hence one MUST install these manually as well.
+
+2) To get the proxy certificates from a station without UI run the command:
+
+ openssl s_client -connect google.com:443 -showcerts -proxy 192.168.176.80:8080 > /tmp/certs.txt
+ 
+ Then open the file, remove any non-certificate-related lines and the end certificate which is not needed and then you could simply concatenate the certs to the relevant ca-bundle file.
+
+3) Examples for setting up the env to work with a proxy:
+
+	-> Windows (using the command 'set' or the GUI):
+
+		set HTTP_PROXY=http://192.168.123.45:8080
+		set HTTPS_PROXY=http://192.168.123.45:8080
+		set NO_PROXY="localhost, 127.0.0.1, 192.168.0.1, 10.0.0.3, 172.16.1.1"
+    
+ 		set http_proxy=http://192.168.123.45:8080
+		set https_proxy=http://192.168.123.45:8080
+		set no_proxy="localhost, 127.0.0.1, 192.168.0.1, 10.0.0.3, 172.16.1.1"   
+		
+
+	-> Linux  (using the command 'export' or updating a global settings file [changes with distro]):
+		-> Important Note: Linux is case sensitive!!!!
+
+		export HTTP_PROXY=http://192.168.123.45:8080
+		export HTTPS_PROXY=http://192.168.123.45:8080
+		export NO_PROXY="localhost, 127.0.0.1, 192.168.0.1, 10.0.0.3, 172.16.1.1"
+
+		export http_proxy=http://192.168.123.45:8080
+		export https_proxy=http://192.168.123.45:8080
+		export no_proxy="localhost, 127.0.0.1, 192.168.0.1, 10.0.0.3, 172.16.1.1"
+
+4) Note that the protocol name (i.e. the protocol schema - where is says: "http://") is ALWAYS HTTP (and not HTTPS) at the URL part (i.e. the value of the variable), EVEN for https proxy settings (i.e. when using the HTTPS_PROXY variable).
+
+5) If you need some locations not to use a proxy init the parameter "NO_PROXY" with the locations with commas as seperators like so:
+	-> Important Note: the NO_PROXY parameter DOES NOT support wildcards (e.g. *.org.il etc.)!!!
+
+	-> Windows (using the command 'set' or the GUI):
+		
+		set NO_PROXY="localhost, 127.0.0.1, 192.168.0.1, 10.0.0.3, 172.16.1.1"
+
+	-> Linux  (using the command 'export' or updating a global settings file [changes with distro]):
+		-> Important Note: Linux is case sensitive!!!!	
+
+		export NO_PROXY="localhost, 127.0.0.1, 192.168.0.1, 10.0.0.3, 172.16.1.1"
+
+		-> TIP: to add a new url to an already existing parameter use the command: export NO_PROXY="$NO_PROXY,my.new.url.org"
+
+
+6) Sometimes (on some tools \ cases) one must use a full URL when setting up the proxy i.e. include the schema "http://" (e.g.  HTTP_PROXY=http://192.168.123.45:80 and not just  HTTP_PROXY=192.168.123.45:80 etc.) before the url otherwise the settings WON'T work (e.g. in NPM). HOWEVER - sometimes the EXACT OPPOSITE will be true and only WITHOUT a schema will the settings work (e.g. in Java). Pay attention to that. In general the major environment settings for proxy mentioned in
+section 3 above will not cause any problems because of a schema inclusion so in that specific case adding the schema is a better idea than not adding it.
+
+7) Create 2 versions: In general, you should create a CAPITAL letter set of parameters (e.g. HTTP_PROXY= and NOT http_proxy= etc.) as this is the default. However, small letter parameters may work too but sometimes ONLY small letters work (like with the command 'curl') so BE SURE to create BOTH versions. This is the best practice.
+
+8) Don't mix CAPITAL letter parameters with small letter parameters (e.g. HTTP_PROXY= and no_proxy= etc.) because on some cases the other case parameters will be IGNORED. If you know that small letter parameters are acceptable for you case, create ALL proxy parameters using small letters.
+
+9) If you get a "wrong ssl version" error check:
+	-> That the proxy values are correct (ip, port, accessibility).
+	-> That the end server supports HTTPS.
+
+10) Sometimes (on some tools \ cases) the proxy environment variables will NOT take affect until one or more certain variables will be configured.
+
+  E.g.: in Alpine Linux, in ordet to get the proxy to work with the built-in 'wget' tool, one MUST define the variable "http_proxy" even if one will use HTTPS sites only!
+  
+      -> in this case the setting of 'http_proxy' will work the same for both HTTP and HTTPS without the need for adding 'https_proxy' as well but nothing will go wrong if one will define both.
+
+
+######################
+# Exceptions by Tools: 
+######################
+
+OS LEVEL:
+
+-> Ubuntu:	
+
+   	-> setup proxy via:
+    
+        "http_proxy" & "https_proxy" environment variables
+
+        e.g. export HTTPS_PROXY="http://192.168.123.45:8080"
+        
+        SEE MORE INFO ABOVE
+   
+   -> ca certs location:
+
+			1. Create a directory for extra CA certificates in /usr/share/ca-certificates:
+
+				sudo mkdir /usr/share/ca-certificates/extra
+				
+			2. Copy the proxy's root ca certificate (get it from the browser) AS A base-64 .crt FILE (other extensions won't work) to this directory:
+
+				sudo cp foo.crt /usr/share/ca-certificates/extra/foo.crt
+				
+			3. Let Ubuntu refresh its DB:
+
+				A. Method 1:
+
+					i. run the command 'sudo dpkg-reconfigure ca-certificates'.
+					ii. Select the new certs from the tui (=text-based UI) and apply.
+
+					Note: If you can't see the new certs in the list, make you that you put them in the right directory and in the right format (must be .crt and not .pem, .cer etc.)
+
+				B. Method 2 (good for automation):
+					
+					i. run the command 'sudo update-ca-certificates --default'.
+					ii. run the command 'sudo apt install -y ca-certificates'.
+
+				C. Method 3 (different folder):
+					i. copy the certificates to the folder: /usr/local/share/ca-certificates/
+					(notice the 'local' folder) instead of /usr/share/ca-certificates/
+					ii. run the command 'sudo update-ca-certificates' (no additional switches or commands needed).
+
+			
+			4. You might want to add the cert to the OS ca bundle file as well:
+			
+				cat my-root-cert.crt >> /etc/ssl/certs/ca-certificates.crt
+				
+
+-> Redhat / Centos:
+
+	-> setup proxy via:
+      
+        "http_proxy" & "https_proxy" environment variables
+
+        e.g. export HTTPS_PROXY="http://192.168.123.45:8080"
+        
+        SEE MORE INFO ABOVE      
+  
+	-> ca certs location:
+     
+       -> make sure you have the CA cert files in base 64 format (otherwise use 'openssl x509 -inform der -in infile.der -out outfile.pem')
+       
+       -> append the certs to the ca-bundle.crt file. It is located in:
+            
+              /etc/ssl/certs/ca-bundle.crt
+              
+docker:
+
+	-> setup proxy via:
+  
+		-> Redhat / Centos:
+
+		/etc/default/docker:
+
+			add the lines:
+
+				export https_proxy="http://192.168.123.45:8080"
+				export http_proxy="http://192.168.123.45:8080"
+
+			restart docker:
+				
+				/etc/init.d/docker restart	
+		
+		-> Ubuntu:
+
+			1. Create a new directory for our Docker service configurations.
+				
+				sudo mkdir -p /etc/systemd/system/docker.service.d
+			
+			2. Create a file called proxy.conf in our configuration directory.
+			
+				sudo vi /etc/systemd/system/docker.service.d/proxy.conf
+			
+			3. Add the following contents, changing the values to match your environment.
+			
+				[Service]
+				Environment="HTTP_PROXY=http://192.168.123.45:8080"
+				Environment="HTTPS_PROXY=http://192.168.123.45:8080"
+				Environment="NO_PROXY="localhost,127.0.0.1,::1"
+			
+			4. Save your changes and exit the text editor.
+			
+			5. Reload the daemon configuration.
+			
+				sudo systemctl daemon-reload
+			
+			6. Restart Docker to apply our changes.
+			
+				sudo systemctl restart docker.service
+		
+		
+	-> ca certs location:
+  
+		-> Redhat / Centos:
+    
+       -> make sure you have the CA cert files in base 64 format (otherwise use 'openssl x509 -inform der -in infile.der -out outfile.pem')
+       
+       -> append the certs to the ca-bundle.crt file. It is located in:
+            
+              /etc/ssl/certs/ca-bundle.crt
+              
+
+		-> Ubuntu:	
+
+			1. Create a directory for extra CA certificates in /usr/share/ca-certificates:
+
+				sudo mkdir /usr/share/ca-certificates/extra
+				
+			2. Copy the proxy's root ca certificate (get it from the browser) AS A base-64 .crt FILE (other extensions won't work) to this directory:
+
+				sudo cp foo.crt /usr/share/ca-certificates/extra/foo.crt
+				
+			3. Let Ubuntu refresh its DB:
+
+				A. Method 1:
+
+					i. run the command 'sudo dpkg-reconfigure ca-certificates'.
+					ii. Select the new certs from the tui (=text-based UI) and apply.
+
+					Note: If you can't see the new certs in the list, make you that you put them in the right directory and in the right format (must be .crt and not .pem, .cer etc.)
+
+				B. Method 2 (good for automation):
+					
+					i. run the command 'sudo update-ca-certificates --default'.
+					ii. run the command 'sudo apt install -y ca-certificates'.
+
+				C. Method 3 (different folder):
+					i. copy the certificates to the folder: /usr/local/share/ca-certificates/
+					(notice the 'local' folder) instead of /usr/share/ca-certificates/
+					ii. run the command 'sudo update-ca-certificates' (no additional switches or commands needed).
+
+			
+			4. You might want to add the cert to the OS ca bundle file as well:
+			
+				cat my-root-cert.crt >> /etc/ssl/certs/ca-certificates.crt
+				
+			
+
+yum:
+	-> setup proxy via:
+		
+		/etc/yum.conf:
+			
+			add a new line:
+
+				proxy=http://192.168.176.80:8080
+
+	-> skip ssl certs verification:
+		
+		/etc/yum.conf:
+			
+			add a new line:
+				
+				sslverify=0
+
+
+composer:
+
+	-> setup proxy via:
+
+		windows / linux:
+
+			"http_proxy" & "https_proxy" environment variables
+
+			e.g. https_proxy="http://192.168.123.45:8080" (the url itself is HTTP! not https.)
+
+	->  ca certs location:
+
+		-> Ubuntu:
+			
+			/etc/ssl/certs/ca-certificates.crt	
+	
+
+	-> set a certificates directory to composer (set to a file, NOT a directory):
+	
+		-> composer config --global cafile C:\xampp\apache\bin\curl-ca-bundle.crt
+		
+		NOTE: Setting a folder as CA does NOT work (e.g. Not working: composer config --global capath C:\Users\ohadm\AppData\Roaming\Composer\ca)
+
+
+apt (Ubuntu only):
+
+	-> setup proxy via:
+
+		-> apt configuration file /etc/apt/apt.conf (or similar)
+
+			-> add the lines:
+
+            Acquire::http::proxy "http://192.168.123.45:8080/";
+            Acquire::https::proxy "http://192.168.123.45:8080/";
+
+	-> ca certs location:
+		
+			1. Create a directory for extra CA certificates in /usr/share/ca-certificates:
+
+				sudo mkdir /usr/share/ca-certificates/extra
+				
+			2. Copy the proxy's root ca certificate (get it from the browser) AS A base-64 .crt FILE (other extentions won't work) to this directory:
+
+				sudo cp foo.crt /usr/share/ca-certificates/extra/foo.crt
+				
+			3. Let Ubuntu refresh its DB:
+
+			A. Method 1:
+
+				i. run the command 'sudo dpkg-reconfigure ca-certificates'.
+				ii. Select the new certs from the tui (=text-based UI) and apply.
+
+				Note: If you can't see the new certs in the list, make you that you put them in the right directory and in the right format (must be .crt and not .pem, .cer etc.)
+
+			B. Method 2 (good for automation):
+				
+				i. run the command 'sudo update-ca-certificates --default'.
+				ii. run the command 'sudo apt install -y ca-certificates'.
+				
+			4. Select the new certs and apply.
+			
+			5. You might want to add the cert to the OS ca bundle file as well:
+			
+				cat my-root-cert.crt >> /etc/ssl/certs/ca-certificates.crt
+		
+    
+	-> skip ssl certs verification:
+  
+		-> apt configuration file /etc/apt/apt.conf (or similar)
+
+			-> add the lines:
+      
+            Acquire::https::Verify-Peer "false";
+            Acquire::https::Verify-Host "false";
+    
+				
+python / pip:
+
+	-> setup proxy via:
+
+		windows / linux:
+
+			"http_proxy" & "https_proxy" environment variables
+
+			e.g. https_proxy="http://192.168.123.45:8080" (the url itself is HTTP! not https.)
+
+
+	-> ca certs location: 
+
+		windows:
+
+			C:\Python27\Lib\site-packages\pip\_vendor\requests\cacert.pem
+
+
+		linux:
+			
+			system location (mandatory - red hat):
+				
+				/etc/ssl/certs/ca-bundle.crt
+
+			system location 2(mandatory - ubuntu):
+				
+				/etc/ssl/certs/ca-certificates.crt
+
+			python location (optional):
+
+				/usr/lib/python2.6/site-packages/pip/_vendor/requests/cacert.pem
+
+	IMPORTANT NOTES:
+	---------------------------------
+		
+		* If the module "certifi" is installed, the bundle certs file to update will be located inside this module's dir and this is the one that will be used by the EVEN IF there are such files inside the 'requests' module dir also.
+
+			-> For example - on python 3.6 this module IS installed so the certs file will be placed in: C:\Python36\Lib\site-packages\pip\_vendor\certifi\cacert.pem
+      
+      -> The default location for certifi's ca-bundle may change. to verify its actual location run the following in the terminal:
+      
+      [user@machine /]$ python or python3 (to get into the python shell)
+      >>>>> import certifi
+      >>>>> certifi.where()
+      >>>>> quit()
+      
+      the output will contain the full path to the ca-bundle cetifi currently looks in.
+		
+		* the command "pip debug" will print to screen the location of the ca bundle being used by it (NOTE: some old versions of pip do not have that command).
+
+    * one can set the environment variable 'REQUESTS_CA_BUNDLE' for a different ca-bundle location for the 'requests' python module.
+        -> e.g. export REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+
+	-> skip ssl certs verification:
+  
+		-> pip configuration file /etc/pip.conf (or similar)
+
+			-> add the lines:  
+          
+          [global]
+          index-url = https://site-to-exclude-address:port/simple
+          trusted-host = site-to-exclude-address #(only address - no schema and no port)
+
+
+php:
+	
+	-> setup proxy via:
+
+		windows / linux:
+	
+			-> php.ini configuration file
+
+				-> directive names and values (NOT available on new versions):
+
+					pfpro.proxyaddress = "http://192.168.123.45"
+					pfpro.proxyport = "8080"
+
+			-> via the code:
+
+					$params = array(
+						'http' => array(
+						'proxy'  => 'tcp://192.168.123.45:8080',
+						'method' => 'GET')
+					);
+
+					$context = stream_context_create($params);
+					
+					$data = stream_get_contents($fp);
+	
+					print_r($data);
+
+			-> for CURL:
+				
+				-> curlFactory.php (composer):
+					add to function 'create':
+
+					$conf[CURLOPT_SSL_VERIFYHOST] = false;
+					$conf[CURLOPT_SSL_VERIFYPEER] = false;
+
+				-> in general:
+
+					curl_setopt($cHandler, CURLOPT_SSL_VERIFYHOST, false);
+					curl_setopt($cHandler, CURLOPT_SSL_VERIFYPEER, false);
+
+	-> ca certs location:
+		
+		windows / linux:
+
+			-> php.ini configuration file
+
+				-> directive name and value:
+
+					openssl.cafile=C:\path\to\ca-bundle.crt
+			
+		Windows note:
+			
+			-> XAMPP bundle file location: C:\xampp\apache\bin\curl-ca-bundle.crt
+
+git:
+
+	-> setup proxy via:
+
+		-> .git/config configuration file
+
+			-> under the [http] segment (create a new one if it does not exist)
+
+				proxy=http://192.168.176.80:8080
+
+
+	-> ca certs location:
+
+		-> .git/config configuration file
+
+			-> under the [http] segment (create a new one if it does not exist)
+			
+				-> add the line:
+
+					sslcainfo=C:/path/to/ca-bundle.crt
+
+					-> Notice the Linux slashes!
+
+
+	-> skip ssl certs verification:
+
+		-> .git/config configuration file
+
+			-> under the [http] segment (create a new one if it does not exist)
+			
+				-> add the line:		
+					
+					sslVerify = false
+
+		-> via environment variable
+	
+			-> Linux: export GIT_SSL_NO_VERIFY=true
+		
+			-> Windows: set GIT_SSL_NO_VERIFY=true
+
+
+
+ruby / gem:
+
+	gem command:
+
+		-> setup proxy via:
+
+			"http_proxy" & "https_proxy" environment variables
+
+			e.g. https_proxy="http://192.168.123.45:8080" (the url itself is HTTP! not https.)		
+
+
+		
+		-> ca certs location:
+
+			-> Windows:
+				-> C:\Ruby23-x64\lib\ruby\2.3.0\rubygems\ssl_certs
+				-> add the needed certs as a .pem file to this dir
+			
+			-> Linux:
+				-> Ubuntu:
+					-> Append the the needed certs to /etc/ssl/certs/ca-certificates.crt
+
+
+wget:
+
+	-> setup proxy via:
+
+		option 1: "http_proxy" & "https_proxy" environment variables
+
+			e.g. https_proxy="http://192.168.123.45:8080" (the url itself is HTTP! not https.)	
+
+		option 2: 
+			
+			-> set an environment variable called "syswgetrc" which tells wget where to search for its config file:
+
+				windows:		
+
+					set syswgetrc=C:\Program Files (x86)\GnuWin32\etc\wgetrc
+
+				linux:
+					
+					export syswgetrc=C:\Program Files (x86)\GnuWin32\etc\wgetrc					
+
+		
+			-> edit the above file and add the follwing lines to it:
+			
+				use_proxy = on
+
+				https_proxy = http://192.168.123.45:8080
+				http_proxy = http://192.168.123.45:8080
+
+
+	-> skip ssl certs verification:
+
+		-> set an environment variable called "syswgetrc" which tells wget where to search for its config file:
+
+				windows:		
+
+					set syswgetrc=C:\Program Files (x86)\GnuWin32\etc\wgetrc
+
+				linux:
+					
+					export syswgetrc=/etc/wgetrc					
+
+		
+		-> edit the above file and add the follwing line to it:
+			
+			check_certificate = off
+
+	-> all via one-liner:
+		-> wget -e use_proxy=on -e http_proxy=http://192.168.123.45:8080 -e https_proxy=http://192.168.123.45:8080 -e check_certificate=off google.com
+
+
+	-> ca certs location:
+		
+		-> use the switch "--ca-certificate=/etc/ssl/certs/ca-bundle.crt"
+
+
+npm:
+
+	-> setup proxy via:
+
+		-> npm commands:
+
+			npm config set proxy http://192.168.176.80:8080/
+			npm config set https-proxy http://192.168.176.80:8080/
+
+
+	-> skip ssl certs verification:
+
+		-> npm command:
+
+			npm config set strict-ssl false
+
+
+node server (node binary file):
+
+	-> skip ssl certs verification:
+  
+		-> set an environment variable:
+			-> NODE_TLS_REJECT_UNAUTHORIZED = 0
+      
+          -> Linux: export NODE_TLS_REJECT_UNAUTHORIZED=0
+          -> Windows: set NODE_TLS_REJECT_UNAUTHORIZED=0
+
+    
+  -> ca certs location:
+    
+      -> set a new env variable named 'NODE_EXTRA_CA_CERTS' and give it a full path to a ca-bundle file. (not verified)
+
+
+snyk(via node.exe):
+
+	-> use the "--insecure" flag when running scans.
+
+
+
+JAVA:
+
+	-> setup proxy via:
+
+    -> Method 1 (os level):
+        
+       -> Use OS LEVEL Environment variables (Both case and no-case options are supported - SEE ABOVE for more details)
+		
+    -> Method 2 (java level):
+    
+      -> add the command line options:
+
+        -Dhttp.proxyHost=192.168.123.45 -Dhttp.proxyPort=8080 -Dhttp.nonProxyHosts="localhost|host.example.com" -Dhttps.proxyHost=192.168.123.45 -Dhttps.proxyPort=8080 -Dhttps.nonProxyHosts="localhost|host.example.com"
+      
+        -> you can also use the JAVA_TOOL_OPTIONS environment variable to store these settings in.
+          
+          -> Windows: set JAVA_TOOL_OPTIONS=-Dhttp.proxyHost=192.168.123.45 -Dhttp.proxyPort=8080 -Dhttp.nonProxyHosts="localhost|cr.vcloud.gov.il" -Dhttps.proxyHost=192.168.123.45 -Dhttps.proxyPort=8080 -Dhttps.nonProxyHosts="localhost|cr.vcloud.gov.il"
+
+          -> Linux: export JAVA_TOOL_OPTIONS=-Dhttp.proxyHost=192.168.123.45 -Dhttp.proxyPort=8080 -Dhttp.nonProxyHosts="localhost|cr.vcloud.gov.il" -Dhttps.proxyHost=192.168.123.45 -Dhttps.proxyPort=8080 -Dhttps.nonProxyHosts="localhost|cr.vcloud.gov.il"
+
+        -> VERY IMPORTANT! Do NOT use a schema with java command line options (e.g. -Dhttp.proxyHost=http://192.168.123.45 with the host param)! It won't work!
+
+	-> ca certs location:
+
+		-> Linux:
+				/etc/pki/ca-trust/extracted/java/cacerts
+
+		-> Windows (for example...):
+
+				C:\Program Files (x86)\Java\jre1.8.0_91\lib\security\cacerts
+
+
+		-> use Java's 'keytool' command line tool to import the proxy's ca cert to the keystore file 'cacerts' using the alias "ca" and the password 
+		"changeit".
+    
+    -> if in Windows, use the free gui tool 'keystore explorer' to update Java's keystore file (you can also edit it in an offline Windows machine and afterwards copy it back to the Linux machine).
+
+
+curl:
+
+	-> setup proxy via:
+
+		-> Linux / Windows: 
+
+			"http_proxy" & "https_proxy" environment variables
+
+			IMPORTANT: for CURL, the variables MUST be small otherwise curl will ignore them!
+
+			e.g. https_proxy="http://192.168.123.45:8080" (the url itself is HTTP! not https.)	
+		
+	-> ca certs location:
+
+		-> Linux:
+
+			/etc/ssl/certs
+
+
+
+google chrome (chrome does NOT use the OS to load CA certificates):
+
+	-> setup proxy via:
+
+		windows / linux:
+		
+			-> Use the settings menu to search for the certificates manager (search for the word "cert").
+			-> Select the "Authorities" tab to add new CA certs.
+			-> Add the needed certs chain (Root and Intermediate certificates).
+
+
+openssl:
+		
+	-> setup proxy via:
+		
+		use the "-proxy 192.168.123.45:8080" switch
+		
+		if the switch does not exist, upgrade the openssl package.
+
+
+
+.net core:
+	
+	-> ca certs location / setup proxy via:
+
+      -> ca certs location: .net core uses the os-level ca-bundle.
+      -> setup proxy via: env vars.
+            -> see the 'docker' section in the begining of this file to get more details.
+		
+
+
+MINGW64/msys2:
+  	-> ca certs location / setup proxy via:
+
+        -> ca certs location: 
+            -> C:\msys64\usr\ssl\certs\ca-bundle.crt a.k.a /usr/ssl/certs/ca-bundle.crt
+        
+        -> setup proxy via: env vars.
+              -> see the 'docker' section in the begining of this file to get more details.
+   
+
+gcloud:
+
+   -> setup proxy via:
+        
+        -> open a terminal and run the cmds:
+        
+            gcloud config set proxy/type http
+            gcloud config set proxy/address 192.168.123.45
+            gcloud config set proxy/port 8080
+   
+   -> ca certs locations:
+   
+      -> Windows:
+          -> C:\path-to-sdk\google-cloud-sdk\lib\third_party\certifi\cacert.pem
+          -> C:\path-to-sdk\google-cloud-sdk\lib\third_party\requests\cacert.pem
+      
+      -> linux:
+          -> /usr/lib/google-cloud-sdk/lib/third_party/botocore/cacert.pem
+          -> /usr/lib/google-cloud-sdk/lib/third_party/certifi/cacert.pem
+
+
+gsutil (a part of gcloud, storage mgmt for gcp):
+    
+   -> setup proxy via:
+        
+        -> open a terminal and run the cmds:
+        
+            gcloud config set proxy/type http
+            gcloud config set proxy/address 192.168.123.45
+            gcloud config set proxy/port 8080
+    
+   -> ca certs location:
+      -> (Windows Example): "C:\tools\google-cloud-sdk\platform\gsutil\gslib\data\cacerts.txt"
+    
+
+awscli:
+
+    -> setup proxy via:
+    
+        -> env vars (not verified)
+        
+    -> ca certs location: 
+        
+        -> windows:        
+            -> C:\Program Files\Amazon\AWSCLIV2\awscli\botocore\cacert.pem
+            
+        -> linux:
+            -> /usr/lib/python3/dist-packages/botocore/cacert.pem
+        
+
+powershell:
+
+    -> setup proxy via:
+    
+        -> env vars / "-proxy" switch in the cmds themselves
+            -> be sure to include the schema (e.g. "http://") when using the "-proxy" switch
+        
+    -> ignore ssl errors by adding the following 2 lines of code to your scripts:
+
+        ->  [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        ->  [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
+
+
+terraform:
+  
+      -> setup proxy via:
+    
+        -> env vars
+            -> IMPORTANT: for terraform, the variables MUST be CAPITAL otherwise terraform will ignore them!
+      
+        -> ca certs location: 
+            -> embed the certificates at OS level
+            
+            SEE MORE INFO ABOVE
+      
+            
+splunk:
+
+    -> ca certs location: 
+    
+        -> embed the certificates at OS level
+        
+        SEE MORE INFO ABOVE        
