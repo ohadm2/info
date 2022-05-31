@@ -1,0 +1,10 @@
+
+In order to fix LOCALE related problems, use the following setup inside a Dockerfile (instead of any other LOCALE related settings):
+
+RUN apt-get install -y locales locales-all
+ENV LC_ALL en_US.UTF-8
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US.UTF-8
+
+
+case for example: install postgres sql.

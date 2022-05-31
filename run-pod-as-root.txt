@@ -1,0 +1,9 @@
+overrides='{ "spec": { "securityContext": { "runAsUser": 0 }}}'
+
+overrides='{ "spec": { "securityContext": { "runAsUser": 0 }}, "serviceAccount": "sa-test-ohad", "imagePullSecrets": [{"name": "ohad-secret"}]}'
+
+
+kubectl run --image=repo.local/path/to/image:tag --overrides="$overrides" -ti <pod-name> <cmd>
+
+
+

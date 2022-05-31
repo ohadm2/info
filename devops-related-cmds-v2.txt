@@ -1,0 +1,365 @@
+common kubectl commands:
+
+
+kubectl apply -f daemonset.yaml -n my-namespace
+
+
+kubectl get pods -n my-namespace
+kubectl get pods -n my-namespace
+
+kubectl get secrets --namespace my-namespace
+
+
+kubectl get daemonsets -n my-namespace
+
+
+kubectl describe pods -n my-namespace
+
+
+
+kubectl logs -n my-namespace my-namespace-xjkzz
+
+kubectl -n my-namespace exec -it test-app-5c47c78967-hbd6x bash
+
+
+kubectl logs -n my-namespace $(kubectl get pods -n my-namespace | tail -1 | awk '{print $1}')
+
+
+kubectl api-resources
+
+kubectl get endpoints -n my-namespace -o yaml | grep 10.245
+
+kubectl get endpoints -n my-namespace -o yaml | grep -b10 "\ 80"
+
+g deployment my-namespace-worker -n my-namespace -o yaml | grep 54
+
+g pod my-namespace-worker-64d655cc98-5l4g4 -n my-namespace -o yaml | grep 45
+
+g services -n my-namespace
+
+g configmaps -n my-namespace
+
+k describe pod my-namespace-worker-64d655cc98-5l4g4 -n my-namespace
+
+k edit daemonset -n my-namespace
+
+k get configmap -n my-namespace -o yaml
+
+k describe pod -n my-namespace
+
+k create secret docker-registry reg-secret-name --docker-server=repository-server-url-and-port --docker-username=<user> --docker-password=<pwd> --docker-email=secret-owner-email -n my-namespace
+
+k exec -it -n my-namespace my-namespace-d9j5s -c my-namespace /bin/bash
+
+k logs -n my-namespace my-namespace-dnr22 -c my-namespace
+
+k delete configmap -n my-namespace --all
+
+g pods -n my-namespace
+
+g daemonset -n my-namespace -o yaml
+
+k apply -f my-namespace-deploy/daemonset.yaml -n my-namespace
+
+k delete daemonset my-namespace -n my-namespace
+
+k create secret generic my-namespace-key --from-literal=access-key=<access-key> -n my-namespace
+
+k apply -f my-namespace-deploy/my-namespace-configmap.yaml -n my-namespace
+
+k apply -f my-namespace-deploy/daemonset.yaml -n my-namespace
+
+k delete configmap my-namespace -n my-namespace
+
+
+k logs -n my-namespace my-namespace-6dgtv -c my-namespace
+
+k exec -it -n my-namespace my-namespace-6dgtv -c my-namespace /bin/bash
+
+k edit configmap my-namespace -n my-namespace
+
+k get pod -n my-namespace --output=wide
+
+k get all -n my-namespace
+
+k get service/haproxy-ingress-service -n my-namespace
+
+k logs -n my-namespace -c collector my-namespace-collector-6d6bf76ddb-kxnt7
+
+g pods -n my-namespace my-namespace-anchore-core-6c4c76766c-zgsr2 -v=8 2>&1 | grep GET
+
+
+
+k exec -it -n my-namespace my-namespace-collector-6d6bf76ddb-kxnt7 -c collector /bin/bash
+
+
+kubectl exec -it net-troubleshooter-75df7bcd8c-c8h75 -c net-troubleshooter /bin/bash
+
+k rollout restart deployment my-namespace-api
+
+kubectl api-resources --verbs=list --namespaced -o name | xargs -n 1 kubectl get --show-kind --ignore-not-found
+
+kubectl get pods --show-kind --ignore-not-found -o name
+
+p -o name | xargs -n 1 kubectl -n $NAMESPACE get
+
+
+kubectl api-resources --verbs=list --namespaced -o name | xargs -I {} -n 1 kubectl -n $NAMESPACE get {} --ignore-not-found -o name
+
+
+back all yaml files of a given namespace with 2 commands:
+
+mkdir myBackup
+cd myBackup
+export NAMESPCAE=myNamespace
+
+kubectl -n $NAMESPACE api-resources --verbs=list --namespaced -o name | xargs -I {} -n 1 kubectl -n $NAMESPACE get {} --ignore-not-found -o name | xargs -I {} dirname {} | xargs mkdir
+
+kubectl -n $NAMESPACE api-resources --verbs=list --namespaced -o name | xargs -I {} -n 1 kubectl -n $NAMESPACE get {} --ignore-not-found -o name | xargs -I {} -n 1 sh -c "kubectl -n $NAMESPACE get {} --ignore-not-found -o yaml > {}.yaml"
+
+
+
+
+k create clusterrolebinding my-namespace --clusterrole=my-namespace --serviceaccount=my-namespace:my-namespace
+
+
+k logs -n my-namespace -c worker my-namespace-worker-b8bbb85bc-fml9m
+
+
+kubectl -n my-namespace scale deployment my-namespace-worker --replicas=0
+kubectl -n my-namespace scale deployment my-namespace-worker --replicas=1
+
+k config get-clusters
+k config get-contexts
+
+
+k create ns my-namespace
+
+a my-namespace-clusterrole-updated.yaml 
+
+k create clusterrolebinding my-namespace --clusterrole=my-namespace --serviceaccount=my-namespace:my-namespace
+
+
+k get events
+
+tkgi clusters
+
+k rollout restart daemonset my-namespace
+
+
+k rollout restart deployment my-namespace-api
+k rollout restart deployment my-namespace-worker
+k rollout restart deployment my-namespace-collector
+
+
+
+
+k edit deployment my-namespace-collector
+
+
+# add bash completion script for kubectl
+kubectl completion bash > /etc/bash_completion.d/kubectl
+# link the completion feature to an alias so that the alias will also get the feature (the alias is 'k' is this example)
+complete -F __start_kubectl k
+
+
+k rollout restart deployment my-namespace-events-forwarder
+k rollout restart deployment my-namespace-events-forwarder-api
+
+k edit deployment my-namespace-events-forwarder
+
+
+
+g clusterrolebinding my-namespace -o yaml
+g clusterrole my-namespace -o yaml
+
+
+k create serviceaccount my-namespace
+k delete clusterrolebinding my-namespace
+k create clusterrolebinding my-namespace --clusterrole=my-namespace --serviceaccount=my-namespace:my-namespace
+
+k describe ds my-namespace
+
+
+k create secret tls my-namespace-ssl-secret --cert=./cert.pem --key=./cert.key
+
+
+kubectl --as=system:serviceaccount:my-namespace auth can-i use podsecuritypolicy/my-namespace
+
+
+k describe pod my-namespace-6m9sk
+
+
+for i in $(kubectl get configmaps -o name);do kubectl get $i -o yaml;done
+
+
+alias conf='for i in $(kubectl get configmaps -o name);do echo "^^^$i:"; kubectl get $i -o yaml;done'
+
+alias kgrep='grep --color=always "^^^\|'
+
+conf | kgrep url"
+
+
+docker login <reg-and-port>
+docker pull <reg-and-port>/<imageNameAndLocation>:<imageTag>
+
+
+p -o name | rev | uniq -s 17 | rev
+
+
+k get nodes -o wide
+
+k rollout restart daemonset/my-namespace
+
+
+helm install splunk-connect -f values.yaml --namespace splunk-connect ./splunk-connect-for-kubernetes
+helm install splunk-connect -f values-test.yaml --namespace splunk-connect ./splunk-connect-for-kubernetes
+
+helm delete splunk-connect --namespace splunk-connect
+
+
+
+./pkstoken -api <k8s-api-url> -user <username> -cluster <k8s-cluster-url>
+
+
+
+k run -it --image <imag-to-get-and-run> <cmd-to-run>
+
+
+k create secret generic my-generic-sercet --from-file=newcert.crt --from-file=newcert.key
+
+
+remove multiple pods:
+--------------------------------------
+
+pn | xargsi D {}
+
+
+get custom fields:
+------------------------------
+
+g pod my-namespace-collector-6c4695bf98-7g9c7 -o custom-columns=containers:.spec.containers[*].name
+
+remove column name:
+
+g pod my-namespace-collector-6c4695bf98-7g9c7 -o custom-columns="":.spec.containers[*].name
+
+
+
+explore the api using kubectl as a proxy server!
+---------------------------------------------------------
+
+kubectl proxy --port=8080 &
+
+curl localhost:8080/api/v1/namespaces/splunk-connect/pods
+
+
+run a bash cmd inside a pod without entering it
+--------------------------------------------------------------
+
+kubectl -n splunk-connect exec -it pod/splunk-connect-splunk-kubernetes-logging-5v2b6 -- /bin/bash -c "echo hi > /tmp/hi.txt"
+
+kubectl -n splunk-connect exec -it pod/splunk-connect-splunk-kubernetes-logging-5v2b6 -- /bin/bash -c "curl -k https://1.2.3.4:8443/api"
+
+# note!!! inner bash signs such as $ etc. MUST BE ESCAPED in order for the outer bash (the os-level bash running kubectl) to ignore them and allow the inner bash (pod-level bash) to run them
+
+kubectl -n splunk-connect exec -it pod/splunk-connect-splunk-kubernetes-logging-5v2b6 -- /bin/bash -c "export T=\$(cat /run/secrets/kubernetes.io/serviceaccount/token) ; curl -k -vvv --header \"Authorization: Bearer \$T\" https://1.2.3.4:8443/api"
+
+
+kubectl -n splunk-connect exec -it pod/splunk-connect-splunk-kubernetes-objects-7b656cdc64-bqlpk -- /bin/bash -c "export LD_LIBRARY_PATH=/tmp; ldd /tmp/tcpdump"
+
+k cp `which docker` splunk-connect-splunk-kubernetes-objects-7b656cdc64-bqlpk:/tmp
+
+
+
+l my-namespace-collector-6c4695bf98-l98wv -c collector -f
+k scale deployment my-namespace-collector --replicas=0
+
+
+k top node
+
+
+k delete secret my-namespace-key
+k create secret generic my-namespace --from-literal=access-key=c01a9032-c285-485a-953d-3732259c8767 -n my-namespace
+
+
+s -n my-namespace my-secret -o yaml | grep ".dockerconfigjson" | awk '{print $2}' | head -1 | base64 -d
+
+
+k top pods -A --sort-by=cpu
+k top pods -A --sort-by=memory
+
+
+l my-namespace-worker-5c95dc6dcb-qfb96 -c worker --tail=30
+
+
+
+yq examples
+-----------------------------------
+
+delete
+--------------
+
+yq eval 'del(.metadata.annotations, .metadata.creationTimestamp, .metadata.generation, .metadata.uid, .metadata.resourceVersion)' my-namespace-worker.yaml  | more
+
+select
+--------------
+
+yq eval '.metadata.annotations' my-namespace-worker.yaml
+
+yq eval '.metadata.annotations, .metadata.creationTimestamp, .metadata.generation, .metadata.uid, .metadata.resourceVersion' my-namespace-worker.yaml
+
+
+
+
+
+overrides='{ "spec": { "securityContext": { "runAsUser": 0 }}}'
+
+overrides='{ "spec": { "securityContext": { "runAsUser": 0 }}, "serviceAccount": "sa-test-ohad", "imagePullSecrets": [{"name": "ohad-secret"}]}'
+
+
+kubectl run --image=repo.local/path/to/image:tag --overrides="$overrides" -ti <pod-name> <cmd>
+
+
+
+
+
+find | grep "\.yaml" | xargs -I {} yq -i eval 'del(.metadata.annotations, .metadata.creationTimestamp, .metadata.generation, .metadata.uid, .metadata.resourceVersion)' {}
+
+grep -iR -A2 "requests:" .
+
+echo 'cpu: "1"' | sed -r 's/cpu: ("1"|"2")/cpu: 500m/'
+
+find | grep "\.yaml" | xargs -I {} sed -i -r 's/cpu: ("1"|"2")/cpu: 500m/' {}
+
+p --show-labels
+
+p -l role="worker"
+
+watch p -l role="collector"
+
+
+l my-pod --since=2h --all-containers
+
+
+
+for i in {1..5}; do echo "run #$i:"; ./multi-image-scanner.sh ; done
+
+
+cat token1.txt | awk -F- '{for (i=1;i<5;i++) {print "field "i":" ; print $i}}'
+cat token1.txt | awk -F- '{for (i=1;i<5;i++) {print "field "i":" ; print $i > "part"i".txt"}}'
+cat token1.txt | awk -F- '{for (i=1;i<NF;i++) {print "field "i":" ; print $i > "part"i".txt"}}'
+
+export T=$(cat /run/secrets/kubernetes.io/serviceaccount/token)
+
+wget --header="Authorization: Bearer $T" --no-check-certificate -S -O - https://10.100.200.1/api/v1/namespaces/test-ohadm/pods
+wget --header="Authorization: Bearer $T" --no-check-certificate -S -O - https://10.100.200.1/api/v1/endpoints
+
+
+
+
+
+
+
+
+
