@@ -1,0 +1,234 @@
+choco install cygwin
+
+
+cat temp.txt | grep "\-\-" | grep -v "http" | awk "{if (NR!=1) {print $2} else {print}}"
+
+curl -k -s -S -X PUT --url %UPLOAD_URL% -H "Content-Disposition: attachment; filename=%FILENAME%" -T %FILENAME%
+
+
+echo $password | docker login $pushRepoUrl --password-stdin -u $userName
+
+
+gcc ssl-web-request.c -L/usr/local/lib/ -lssl -lcrypto
+gcc ssl-web-request.c -L/usr/local/lib/ -l:libcrypto.dll.a -l:libssl.dll.a -static
+
+
+$ echo $cmd | tr -d "[" | tr -d "]" | tr -d "," | tr -d "\""
+ nsenter --target 1 --mount --uts --ipc --net --pid -- bash -l
+ 
+ 
+forfiles /c "cmd /c start notepad++ @file"
+ 
+
+perl -e "print 'k8s ' x100"
+
+
+wget --no-check-certificate -O intezer-protect-v2 $(wget --no-check-certificate -O - 'https://protect.intezer.com/api/v2/install/pkg?key=<key>&pkg_type=bin')
+ 
+ 
+docker run -it -d golang:1.16 sh
+docker ps
+docker cp proxy-script/all-v2.24.sh 65e3121ffb36:/tmp
+
+docker exec -it 65e3121ffb36 sh
+
+wget --no-check-certificate https://registry.hub.docker.com/v1/repositories/alpine/tags -O -  | sed -e 's/[][]//g' -e 's/"//g' -e 's/ //g' | tr '}' '\n'  | awk -F: '{print $3}' | sort -rn
+
+
+apt-get --allow-insecure-repositories update
+apt-get install --allow-unauthenticated -y --download-only open-vm-tools
+
+
+echo -e "apt-get 123 update\n2nd line" | grep -n 2n
+echo -e "apt-get 123 update\n2nd line" | grep -n 2n | awk -F: '{print $1}'
+echo -e "apt-get 123 update\n2nd line" | sed '1 a <LINE-TO-BE-ADDED>'
+
+docker build -t ubuntu-pkgs-downloader:1.0 path/to/Dockerfile
+docker run --name=ubuntu-pkgs-downloader --rm -v /home/devuser/projects/ubuntu-pkgs-downloader/pkgs:/pkgs ubuntu-pkgs-downloader:1.0 open-vm-tools
+
+docker build -t ubuntu-pkgs-finder:1.0 .
+docker run --name=ubuntu-pkgs-finder --rm ubuntu-pkgs-finder:1.0 open-vm-*
+ 
+cat /etc/os-release | grep PRETTY_NAME | awk -F\" '{print $2"-"}' | tr " " "_"
+
+docker images | grep "<none>" | awk '{print $3}' | xargs docker rmi
+
+docker ps -a | awk '{print $1}' | grep -v CONT | xargs docker stop
+
+docker ps -a | awk '{print $1}' | grep -v CONT | xargs docker rm
+
+docker images --format "table {{.Repository}}:{{.Tag}}"
+
+docker images | grep -v REPO | awk '{print $1}' | sed "s/quay\.io/my.repository.local\/security/"
+
+docker images | grep -v REPO | awk '{print $1}' | sed "s/quay\.io/my.repository.local\/security/" | sed "s/^sysdig/my.repository.local\/security\/sysdig/"
+
+docker images | grep -v REPO | awk '{print $1}' | xargs -I {} sh -c "echo docker tag {} {}"
+ 
+docker images | grep -v REPO | awk '{print $1}' | xargs -I {} sh -c "echo docker tag {} $(echo {}-extra-data)"
+
+docker images | grep -v REPO | awk '{print $1}' | xargs -I {} sh -c 'echo docker tag {} $(echo {} | sed "s/quay\.io/my.repository.local\/security/" | sed "s/^sysdig/my.repository.local\/security\/sysdig/")'
+
+docker images --format "table {{.Repository}}:{{.Tag}}" | grep -v REPO | awk '{print $1}' | xargs -I {} sh -c 'echo docker tag {} $(echo {} | sed "s/quay\.io/my.repository.local\/security/" | sed "s/^sysdig/my.repository.local\/security\/sysdig/")'
+
+docker images --format "table {{.Repository}}:{{.Tag}}" | grep -v REPO | awk '{print $1}' | xargs -I {} sh -c 'echo {} $(echo {} | sed "s/quay\.io/my.repository.local\/security/" | sed "s/^sysdig/my.repository.local\/security\/sysdig/")' | xargs -I {} echo docker tag {} | xargs -I {} sh -c "{}"
+ 
+docker images --format "table {{.Repository}}:{{.Tag}}" | grep 1025 | xargs -I {} docker push {}
+
+
+ 
+/cygdrive/c/Windows/System32/cmd.exe /c start notepad++ errors.h
+
+
+docker run -d -p 3000:3000 3d6dcc53216a
+
+docker inspect 3d6dcc53216a | grep IPAddress
+
+docker inspect 3d6dcc53216a | jq '.[].NetworkSettings.Networks.bridge.IPAddress'
+
+
+docker run --add-host postgres-db:$(docker inspect my-db-container-id | jq '.[].NetworkSettings.Networks.bridge.IPAddress' | tr -d "\"")  -p 3000:3000 -d my-web-container-id
+
+
+docker run --user root --entrypoint=/bin/ash -it  aqua-reports:1.1
+
+
+# may fix some build cmds in GO - add to builder docker image:
+ENV GO111MODULE auto
+
+
+Lookaround	Name	What it Does
+(?=foo)	Lookahead	Asserts that what immediately FOLLOWS the current position in the string is foo
+(?<=foo)	Lookbehind	Asserts that what immediately PRECEDES the current position in the string is foo
+(?!foo)	Negative Lookahead	Asserts that what immediately FOLLOWS the current position in the string is NOT foo
+(?<!foo)	Negative Lookbehind	Asserts that what immediately PRECEDES the current position in the string is NOT foo
+
+
+Given the string "foobarbarfoo"  : 
+
+bar(?=bar)     finds the 1st bar ("bar" which has "bar" after it)
+bar(?!bar)     finds the 2nd bar ("bar" which does not have "bar" after it)
+(?<=foo)bar    finds the 1st bar ("bar" which has "foo" before it)
+(?<!foo)bar    finds the 2nd bar ("bar" which does not have "foo" before it)
+You can also combine them:
+
+(?<=foo)bar(?=bar)    finds the 1st bar ("bar" with "foo" before it and "bar" after it)
+
+
+
+linux - get all env vars including hidden ones - ( set -o posix ; set )
+
+
+run a docker container with strace support:
+
+       docker run -it --cap-add=SYS_PTRACE 8e2d606e619f bash
+       
+       
+       
+IMAGE_NAME_WITHOUT_REPO=$(echo $i | awk -F/ '{all=""; for (i=2; i<=NF; i++) if (i>1) {all=all"/"$i}; print all'})
+    
+    
+
+
+docker run --rm -v /home:/home ubuntu cat /home/devuser/.docker/config.json
+
+
+strace -e open ./test
+ 
+nsenter --target 1 --mount --uts --ipc --net --pid -- bash -l
+
+cat scan_report.html | grep -o "<h3.*panel-title.*<\/h3>"
+
+
+dpkg-query --show --showformat='${Package} ${Version}\n'
+
+
+# when the link to glibc gets corrupted
+LD_PRELOAD=/lib/x86_64-linux-gnu/libc-2.28.so ln -s /opt/libc-2.28.so libc.so.6
+
+
+
+
+Invoke-WebRequest -URI "http://my.api.server/API/Server/Version" -Proxy 'http://192.168.174.80:8080'
+
+Invoke-WebRequest -Method post -URI "https://my.api.server/API/11.5.2.637/Auth/EPM/Logon" -Body "{`"Username`": `"user`", `"Password`": `"password`", `"ApplicationID`": `"something`"}" -Proxy "http://localhost:8080" -ContentType "application/json"
+
+
+
+ ps -eo pid --no-header
+ 
+ 
+ gcc -ggdb CVE-2022-0847-my-revised-poc-for-docker.c
+ 
+ gdb --args ./a.out /tmp/overwrite "line 2"
+ 
+ 
+cd /d S:\mySources\terraform\aws-test && mklink /d .terraform C:\temp\terraform-providers 
+
+
+
+curl -u "my-user:my-pwd" -X POST -x localhost:8080 -k "https://my.api.server/api/users" -H "Content-Type: application/json"
+
+curl -X POST -x localhost:8080 -k https://my.api.server/api/auth -H "Content-Type: application/json" -d "{ \"u\": \"my-user\", \"p\": \"my-pwd\" }"
+
+
+curl -X POST -x localhost:8080 -k https://my.api.server/api/auth -H "Content-Type: application/json" -d "{ \"u\": \"my-user\", \"p\": \"my-pwd\" }"
+
+
+
+curl -X POST -x localhost:8080 -k https://my.api.server/api/alerts/security/ -H "Content-Type: application/json" -H "Cookie: sessionid=%TOKEN%"
+curl -X GET -x localhost:8080 -k https://my.api.server/api/alerts/security/ -H "Content-Type: application/json" -d "\"Cookie\": \"sessionid=%TOKEN%\""
+
+
+
+curl -X GET -x localhost:8080 -k https://my.api.server/api/alerts/security/ -H "Set-Cookie: sessionid=%TOKEN%"
+
+
+
+curl -u "my-user:my-pwd" -X GET -x localhost:8080 -k "https://my.api.server/api/alerts/security/?from=1647338097822&id=573cd4b1a2f96d4e0f2668ca&severity=INFO,LOW,MEDIUM,HIGH,CRITICAL&to=1647424497822&type=account" -H "Set-Cookie: sessionid=%TOKEN%"
+
+
+
+
+curl -u "my-user:my-pwd" -X GET -x localhost:8080 -k "https://my.api.server/api/alerts/security/?from=&id=573cd4b1a2f96d4e0f2668ca&severity=HIGH,CRITICAL&to=&type=account&interval=5" -H "Set-Cookie: sessionid=%TOKEN%"
+
+
+
+Get-AWSCmdletName | Select-Object -ExpandProperty "cmdletname" | select-string "get-iam"
+
+
+forfiles /m *.txt /c "cmd /c type @file >> all.txt"
+
+
+find . -name cacert.pem | xargs -I {} echo cat /cygdrive/s/projects/proxy-and-ssl-via-script/certs-bundle.txt \>\> {} | sh
+
+
+sudo find / -name cacert.pem -exec ls -l {} \;
+sudo find /home/devuser/.local -name cacert.pem | xargs -I {} echo cat ./certs-bundle.txt \>\> {} | sh
+
+
+PS S:\> $projects=gcloud projects list --format="value(project_id)"
+PS S:\> foreach($project in $projects){echo "searching for k8s clusters in project '$project' ...`n" ; gcloud container clusters list --project=$project ; echo "`n"}
+
+
+apt update -oDebug::pkgAcquire::Worker=1
+apt update -oDebug::Acquire::gpgv=1
+apt update -oDebug::Acquire::http=1
+ 
+ 
+$env:GOOS="windows"
+go build .\download-v2.go
+
+
+openssl s_client -connect google.com:443 -showcerts 2>&1 </dev/null | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p'
+
+find -type f -name "?" | xargs -I {} echo "echo -n '$(openssl s_client -connect google.com:443 -showcerts 2>&1 </dev/null | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p')'" \>\> {} | bash
+
+sudo find ~ -name cacert.pem | xargs -I {} echo "echo -n '$(openssl s_client -connect google.com:443 -showcerts 2>&1 </dev/null | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p')'" \>\> {} | bash
+
+sudo find / -name cacert.pem | xargs -I {} echo "echo -n '$(openssl s_client -connect google.com:443 -showcerts 2>&1 </dev/null | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p')'" \>\> {} | bash
+
+
+
+dialog --radiolist  "This is a selective list, where only one option can be chosen" 10 50 2 "a" "This is the first option" "off" "b" "This is the second option" "on" 
+
