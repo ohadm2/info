@@ -64,9 +64,14 @@ section 3 above will not cause any problems because of a schema inclusion so in 
 
 10) Sometimes (on some tools \ cases) the proxy environment variables will NOT take affect until one or more certain variables will be configured.
 
-  E.g.: in Alpine Linux, in ordet to get the proxy to work with the built-in 'wget' tool, one MUST define the variable "http_proxy" even if one will use HTTPS sites only!
+  E.g.: in Alpine Linux, in order to get the proxy to work with the built-in 'wget' tool, one MUST define the variable "http_proxy" even if one will use HTTPS sites only!
   
       -> in this case the setting of 'http_proxy' will work the same for both HTTP and HTTPS without the need for adding 'https_proxy' as well but nothing will go wrong if one will define both.
+
+11) Same math as point 10 above goes for removals as well. 
+
+  E.g.: for 'kubectl', even though it works only in HTTPS, the HTTP_PROXY variable MUST ALSO BE REMOVED and it is NOT enough just to remove the HTTPS_PROXY parameter alone.
+
 
 
 ######################

@@ -1,0 +1,54 @@
+
+show which packages are installed on a machine
+
+rpm -qa
+
+show package dependencies
+
+rpm -qpR <pkg_name>
+
+
+install a package
+
+rpm -ivh <pkg_name>
+
+
+re-install a package
+
+rpm -ivh --replacepkgs <pkg_name>
+
+
+update an already installed package
+
+rpm -Uvh <pkg_name>
+
+
+remove a package
+
+rpm -e <pkg_name>
+
+
+shows an install process without actually installing the package
+
+rpm -Kvv <pkg_name>
+
+
+list the files for already INSTALLED package:
+
+rpm -ql <pkg_name_WITHOUT_THE_VERSION_NUMBER> (basic / yum format pkg name)
+
+
+list the files for RPM package:
+
+rpm -qlp <pkg_name>.rpm
+
+
+import a repo key so that it's rpms will be trusted (without this import YUM will refuse to install pkgs)
+
+rpm --import RPM-PGP-KEY-redhat-release
+
+
+show which files are needed by an rpm (rpm dependencies):
+
+rpm -q --requires <pkg_name>
+

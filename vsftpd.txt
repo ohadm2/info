@@ -1,0 +1,121 @@
+#---------------------------------------------------
+# server settings (/etc/vsftpd/vsftpd.conf)
+#---------------------------------------------------
+
+# server root folder
+
+local_root=/ftp
+
+# enable log  (default conf won't create a general log):
+# the log is /var/log/vsftpd.log
+
+dual_log_enable=YES
+
+# enable passive mode 
+
+pasv_enable=Yes
+pasv_min_port=10090
+pasv_max_port=10100
+pasv_address=192.168.174.100
+
+# enables non-anonymous FTP
+
+local_enable=YES
+
+# enables uploads and new directories
+
+write_enable=YES
+
+
+
+# hides the FTP server user IDs and just display "ftp" in directory listings
+
+hide_ids=YES
+
+# Connection limit for each IP:
+
+max_per_ip=2
+
+# Maximum number of clients:
+
+max_clients=20
+
+# enable ftp over tls
+
+sudo openssl req -x509 -nodes -newkey rsa:2048 -keyout /etc/ssl/vsftpd.key -out /etc/ssl/vsftpd.pem
+
+rsa_cert_file=/etc/ssl/private/vsftpd.pem
+rsa_private_key_file=/etc/ssl/private/vsftpd.pem
+
+ssl_enable=YES
+allow_anon_ssl=NO
+force_local_data_ssl=YES
+force_local_logins_ssl=YES
+ssl_tlsv1=YES
+ssl_sslv2=NO
+ssl_sslv3=NO
+require_ssl_reuse=NO
+ssl_ciphers=HIGH
+
+
+# other options
+
+deny_file={*.file,*.html}
+
+# changing upload permissions in vsftpd
+
+local_umask=002
+chmod_enable=YES
+file_open_mode=0755
+
+
+---------------------------------------------------
+ filesystem settings
+---------------------------------------------------
+
+1. create a path according to the server's 'local_root' setting.
+
+e.g. 
+	mkdir /ftp
+
+2. setup the group of the root folder to be 'ftp' (created after installing vsftpd).
+
+e.g.
+	chgrp ftp /ftp
+
+3. add write permissions to that group on that folder.
+
+e.g.
+	chmod g+w /ftp
+
+
+	
+-----------------------------------------------------
+ allow a user to access a site's dir via ftp
+-----------------------------------------------------
+
+1. set the user's group to the group that runs the web server (in /etc/passwd)
+tehila to group apache , apache to group ftp
+
+2. give the group write permissions to the ftp dir(s) that require write permissions
+
+3. setup 'local_umask' to '027' to disallow access to other users 
+
+
+
+
+-----------------------------------------------------
+ Troubleshooting
+-----------------------------------------------------
+
+if the error "500 OOPS: vsftpd: cannot locate user specified in 'ftp_username':ftp"
+it means that the default user and group setup for the ftp service are invalid.
+
+to fix the problem, set the 'ftp_username' directive in the /etc/vsftpd/vsftpd.conf
+settings file.
+
+e.g.: 
+
+ftp_username=nobody
+
+

@@ -1,0 +1,12 @@
+
+show which packages are needed by a package (package dependencies):
+
+	yum deplist <pkg_name>
+
+
+check if a package is installed or not:
+
+	yum list installed <pkg_name>
+
+	(the command returns 0 if true and 1 otherwise)
+
