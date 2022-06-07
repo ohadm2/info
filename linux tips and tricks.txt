@@ -1,0 +1,1060 @@
+
+=========================================================================================================
+* VI tip
+
+	to see basic stats of a file press ctrl+g.
+
+	the stats include:
+
+	1. The name of the file currently being edited
+	2. The current line number
+
+=========================================================================================================
+* AWK tip
+
+	awk '{$1=$2=""; print $0}' <file>
+
+	
+	use awk to get only columns starting from the 3rd column
+
+	NOTES:
+
+	$1="" and $2="" - reset the 1st and the 2nd columns so that they will return nothing.
+
+	print $0 - after resetting the columns we don't need we can print "everything else" by 
+	using the $0 parameter.
+	
+
+=========================================================================================================
+* echo the_sign_"_will_be_removed_from_this_line | tr -d "\""
+
+	delete the char ' " ' from a given text
+
+=========================================================================================================
+* BASH tip
+
+	APPEND_AFTER_LINE=24
+
+	sed -i '${APPEND_AFTER_LINE}a this line will be appended after line 24' <file>
+
+	
+	sometimes a command needs to be attached to a parameter without spaces between the two
+	due to its syntax such as in this SED example which appends text after a given line.
+
+	in this case, in order to tell bash where the parameter name ends (the start of the name is not a 
+	problem due to the $ delimiter), we need to put it between curly brackets (${param}) because if we 
+	won't, in this example the parameter and the sed append command 'a' will become a new empty parameter
+	named '$APPEND_AFTER_LINEa' and the sed command will fail. 
+
+
+=========================================================================================================
+* FIND TIP
+
+	find . -name page.html -exec echo -e "{}:\n" \; -exec grep "myJs.js" {} \;
+
+	this find command is special because it has multiple -exec arguments which is availabe in find.
+	one -exec is responsible for running the wanted command on the found files (which is 'grep' in this
+	example) and the other is used to print the file which was manipulated by the 1st command.
+
+	without the echo command we won't know which file was found with the grep pattern inside it.
+
+	NOTE:
+	
+	the built in '-print' argument of find is not good enough here because it addresses ALL of the files
+	find goes over whereas using an echo inside an -exec argument will print ONLY the file names that the find
+	pattern was looking for (in this case files with the name 'page.html' only)  
+
+
+=========================================================================================================
+* sh -c "echo > /var/log/kern.log"
+
+	empty a file that is owned by root without deleting it ('echo' won't work via sudo directly)
+
+=========================================================================================================
+* SED tip
+
+	'/\*/b; s/\(database\ =>\ \).*/\1NewValue/g'
+
+	replace a line but only if it does NOT include "*"
+
+	Notes:
+
+	* This 1st part of the sed command means 'skip current line if it contains "*" ' It's sed's 
+	equivalent to the regex expression "[^*]".
+
+
+=========================================================================================================
+* AWK tip
+
+	df -T /home/ohadm/  | awk '{ s = ""; for (i = 5; i <= NF; i++) s = s $i " "; print s }'
+
+	print a table starting from a specific column number (in this example 5), in other words
+	print a partial table.
+
+	the 's' parameter is accumulate the current line so that the output will stay in a table format
+	(otherwise each token will be printed in a different line).
+
+	this example is useful when it is hard to divide output based only on a delimiter.
+
+=========================================================================================================
+* FIND tip
+
+	find . -name "myFile" -exec echo removing {} ... \; -exec rm {} \;
+
+	multiple exec operations in one find command
+
+=========================================================================================================
+* SED tip
+
+	sed '34s/AAA/BBB/' <file>
+
+	replace 'AAA' with 'BBB' but ONLY work on line 34.
+
+=========================================================================================================
+* SED tip
+
+	sed '8i This is new line 9' <file>
+
+	append a new line after line #8. Notice the 'i' which sets the line number.
+
+=========================================================================================================
+* add a new line to crontab via bash script
+
+	#!/bin/bash
+
+	line="* * * * * /path/to/command"
+	(crontab -u aUser -l; echo "$line" ) | crontab -u aUser -
+
+	Notes:
+
+	the user part (-u aUser) is OPTIONAL
+
+=========================================================================================================
+* grep -Pzo "(?s)^(\s*)\N*main.*?{.*?^\1}" *.c
+
+	Explanation:
+
+	-P activate perl-regexp for grep (a powerful extension of regular extensions)
+
+	-z suppress newline at the end of line, subtituting it for null character. That is, grep knows where end of line is, but sees the input as one big line.
+
+	-o print only matching. Because we're using -z, the whole file is like a single big line, so if there is a match, the entire file would be printed; this way it won't do that.
+
+	In regexp:
+
+	(?s) activate PCRE_DOTALL, which means that . finds any character or newline
+
+	\N find anything except newline, even with PCRE_DOTALL activated
+
+	.*? find . in nongreedy mode, that is, stops as soon as possible.
+
+	^ find start of line
+
+	\1 backreference to first group (\s*) This is a try to find same indentation of method
+
+	this search prints the main method in a C (*.c) source file.
+
+=========================================================================================================
+* sed -n 4,12p <file>
+
+	get a range of lines from a file
+
+=========================================================================================================
+* TAIL:
+
+	tail -3
+
+		get last three lines from the end
+
+	tail +3
+
+		get ALL lines starting from the 3rd line
+
+=========================================================================================================
+* grep -P "[\t]*" <file>
+
+	Search for special chars.
+	Grep does not look for special chars such as tabs by deafult. In order to use them, one must
+	supply the '-P' switch which extends grep's search with Perl regex syntax (hence the 'P').
+
+=========================================================================================================
+* ls -l | grep "Feb\ 14" | awk '{print $9" "$10" "$11}' | xargs -I {} rm {}
+
+	Remove a file based on properties other than its name (e.g. when the server does not have
+	Hebrew support but a file with Hebrew chars and spaces needs to be removed)
+	
+	Notes:
+	
+	In this example, a file name could be something like "זה שם הקובץ.txt"
+
+	The 'awk' command takes all of the parts of the file into one name so that xargs could find it.
+
+
+=========================================================================================================
+* grep -n "patternToFind" <file> | tail -2 | head -1 | awk -F: '{print $1}' 
+	| xargs -I {} awk 'NR>={}' <file>
+
+	Get a part of a file starting from a line that holds the pattern 'patternToFind' but present 
+	for the 2nd time from the end and until the end of the file.
+
+	It's the 2nd to support a header that defines a new section inside the file such as
+
+	==================
+	title
+	==================
+
+	or
+
+	-----------------
+	section
+	-----------------
+
+	etc.
+
+	NOTES:
+
+	grep -n: show found patternd with their line numbers.
+	awk -F: : set up a delimiter of ":" for the fields to get only the line number for grep's output.
+	NR: "line number" in awk.
+	
+
+=========================================================================================================
+* #!/bin/bash -x
+
+	Use the '-x' option at the head of a script to see all of the commands printed as they are 
+	executed - useful for debugging the script (adds batch 'echo' option to the script).
+
+=========================================================================================================
+* command > myFileWithErrors.txt 2>&1
+
+	redirect both errors and standard output to a file
+
+=========================================================================================================
+* Define global variables:
+
+	Ubuntu:
+		* set the variables inside an existing system file called /etc/bash.bashrc
+		* use a script syntax - e.g. use lines such as:
+
+			export myVar="myValue"
+
+	Red Hat:
+		* set the variables inside a new script called 'custom.sh'.
+		* place it inside /etc/profile.d
+		* use a script syntax - e.g. use lines such as:
+
+			export myVar="myValue"
+		
+	
+
+=========================================================================================================
+* Send a string to a command using '<<<'
+
+	Syntax:
+
+		COMMAND <<<$WORD
+
+	Example:
+			
+		grep $VAR <<< "search for this string in var"
+
+	(Instead of:
+
+		echo $VAR | grep "search for this string in var"
+	)	
+
+=========================================================================================================
+* TERMINAL USAGE TIPS
+
+	1. Use SHIFT + Page Up (or Page Down to go back) to scroll through previous output
+	2. Use Ctrl + K to delete typed words from current position to the end of the line
+	3. Use Ctrl + A to jump to the start of the line
+	4. Use Ctrl + E to jump to the end of the line
+
+=========================================================================================================
+* rev
+	reverse all of the chars
+
+=========================================================================================================
+* Reset a user's profile:
+
+	1. cp -R /etc/skel/* /home/user_to_reset
+	2. chown -R user_to_reset:user_to_reset *
+	3. chown -R user_to_reset:user_to_reset .??*
+
+=========================================================================================================
+* du -hs ./*/
+
+	show sizes of folders ONLY
+
+=========================================================================================================
+* du .??*
+
+	show hidden files and folders
+
+	NOTES:
+
+	the 2 question marks are mandatory and needed to skip the ".." dir.
+
+=========================================================================================================
+* du -hs --exclude={proc,usr,tmp,dev} *
+
+	show a summery of dir sizes EXCEPT a list of dirs to exclude.
+
+=========================================================================================================
+* pkill -9 -u myUserName
+
+	kill a whole session associated with a username.
+
+	NOTE:
+
+	that includes every binary that the user ran so if it's root for example,
+	make sure you know what is about to be kiiled because you'll need to re-run
+	some of the services.
+
+=========================================================================================================
+* mkdir /tmp/{dir1,dir2,dir3}
+	
+	run a command multiple times while sharing only a part of it.
+
+	this example creates many dirs at once while sharing a part of the path to create in.
+	
+=========================================================================================================
+* cat /etc/pam.d/*
+
+	prints the contect of EVERY file inside the pam.d directory.
+	
+	this is a bash wildcards example.
+
+=========================================================================================================
+* cat >> mutlilined-input.txt << EOF
+line one
+line two
+line three
+EOF
+
+	creates a multilined txt file via the terminal
+
+=========================================================================================================
+* ls -l --time-style="+%Y-%m-%d"
+
+	display a customized time format for ls
+
+=========================================================================================================
+* eval $var
+
+	execute a command inside a variable.
+
+	example:
+
+	export myCMD="echo this is the output of ls: ; ls"
+
+	eval $myCMD
+
+=========================================================================================================
+* diff <(cat list1.txt) <(ls /data | grep "txt")
+
+	show a list of different lines between 2 command OUTPUTS (instead of using files).
+
+	NOTES:
+
+	* the 'smaller than' sign MUST be adjacent to the resources and the command must
+	be between round brackets. the sign converts a shell command to a file (it CREATES
+	a new file in the background). This is useful for running scripts or commands that require
+	files without creating the files in advance.
+
+=========================================================================================================
+* comm -1 -2 <(cat list1.txt | sort) <(ls /tmp | sort)
+
+	show a list of similar lines between 2 command OUTPUTS (instead of using files).
+	
+	NOTES:
+
+	-1: ignore lines that only the first resource contains
+	-2: ignore lines that only the second resource contains
+
+	* the 'smaller than' sign MUST be adjacent to the resources and the command must
+	be between round brackets. the sign converts a shell command to a file
+	* the input must be sorted first (hence the 'sort' command)
+	
+=========================================================================================================
+* cat csv-list.txt | tr ',' '\n' > newlines-list.txt
+
+	convert comma delimited list (e.g one,two,three) to new line delimited list 
+
+=========================================================================================================
+* echo my machine name is: `hostname`
+
+	use output from one command directly inside a second command
+	the first command needs to be between back-apostrophes (``) to be executed on the fly
+
+=========================================================================================================
+* echo my machine name is: $(hostname)
+
+	use output from one command directly inside a second command
+	the first command needs to be between round brackets with the dollar sign
+	to be executed on the fly.
+
+=========================================================================================================
+* pam_tally2 --user=user_to_unlock --reset
+
+	unlock a user
+
+=========================================================================================================
+* cp -R `ls /dir/to/copy | grep -v "inner_dir_to_exclude"` destination
+
+	copy a full dir while excluding a sub dir
+
+=========================================================================================================
+* cat file | sort | uniq
+
+	list only uniqe lines
+
+	NOTES:
+
+	The file content MUST be sorted using 'sort' first otherwise the uniq command won't
+	return correct results.
+
+=========================================================================================================
+* zcat file.gz
+
+	view a gzipped text file without the need to extract it
+
+=========================================================================================================
+* VI TIP
+
+	to undo a change:
+
+	u
+
+	to redo 
+
+	ctrl+r
+
+=========================================================================================================
+* VI TIP
+
+	to replace text inside VI use the command (similar to 'sed'):
+
+	:%s/findMe/replaceWithMe/g
+
+=========================================================================================================
+* VI TIP
+
+	to find text inside VI use the command:
+
+	/text_to_look_for
+
+	find next:
+
+	n
+
+	find previous:
+
+	N
+
+=========================================================================================================
+* VI TIP
+
+	to edit more than one file at once:
+
+	open:
+
+	vi file1 file2 ... filen
+
+	go to the next one:
+
+	:n
+
+	go to the previous one:
+
+	:prev
+
+=========================================================================================================
+* VI TIP
+	
+	to jump to a specific line simply specify the desired line number:
+
+	:line_to_jump_to
+
+	example:
+
+	:12934
+
+=========================================================================================================
+* VI TIP
+
+	to see line numbers:
+
+	:set nu
+
+	to hide the numbers use
+
+	:set nonu		
+
+=========================================================================================================
+
+* VI TIP
+	
+	to see special chars inside a file, use the command:
+
+	:set list
+
+	to hide them back use
+
+	:set nolist		
+
+=========================================================================================================
+* BASH TIP
+
+	to get access to aliases inside bash scripts, add the following to the top of the script:
+
+	shopt -s expand_aliases
+
+=========================================================================================================
+* unalias name
+
+	remove an existing alias
+
+=========================================================================================================
+* grep -iR ".*word.*" /myPath/myDir
+
+	recursive and case in-sensitive search of any line that contains the text 'word'
+
+=========================================================================================================
+* grep --exclude-dir=myDir
+
+	skip a dir when running grep
+
+=========================================================================================================
+* grep --color=always OR grep --color=auto
+  ls --color=always OR ls --color=auto
+
+	add colors to commands outputs
+
+	NOTE:
+
+	'always' will show colors even after piping many commands but the output may mess the shell color
+	itself as well. In order to reset the color back to default settings if this happens, simply run
+	the command 'reset'.
+
+	'auto' will show colors for the output but the color won't stay after piping commands.
+
+=========================================================================================================
+* multilined grep
+	
+	grep processes input line by line by default.
+	to work on more than one line in parallel using grep, one can use the "-z" switch which ignores
+	the "\n" char.
+	this will make grep see the whole output as one big block.
+
+	example:
+	
+	grep -z file
+
+=========================================================================================================
+* multilined sed
+	
+	sed processes input line by line by default (it looks for '\n' to define a new line).
+	to work on more than one line in parallel using sed, one can use the expression "N;" to say 
+	"skip one \n" which in other words means 'work on 2 lines'. Multiple that to extend to 3 lines
+	'N;N;' etc.
+
+	the example:
+	
+	sed 'N;N; /.*user.*/d' file
+	
+	(notice the space)
+
+	means:
+
+	remove any 3 lines that contain the regex '.*user.*'
+	
+
+=========================================================================================================
+* sed "s/FindThisExpression/ReplaceItWithThisExpression/g"
+
+	basic sed usage. replace only a sub-string or a regex inside a file. use '-i' to write the changes
+	(by default sed only shows the changes that will take place after running the command)
+
+=========================================================================================================
+* sed "/FindALineWithThisExpression/c ReplaceItEntirelyWithThisLine"
+
+	line-based text replacement. replaces an entire line with a sub-string or regex even if the 
+	expression to find is only a sub-string of a line.
+
+=========================================================================================================
+* sed "/searchLinesThatcontainThisText/d" file
+
+	delete all lines that contain the text being searched
+
+=========================================================================================================
+* sed "/searchForThisLine/s/^/#/" file
+
+	add the sign '#' at the begining of the text that was being searched
+
+=========================================================================================================
+* sed "/searchForThisLine/a lineToAppend" file
+
+	add a line AFTER the text that was being searched
+
+	NOTES:
+
+	1. The letter 'a' after the line to search is the append command.
+	2. Don't use the prefix 's' at the beginning of the command as being done when 
+	manipulating text as it won't work with it.
+
+=========================================================================================================
+* sed '/#/!{s/.*user.*/newLine/g}' file
+
+	change any line containing the word "user" and does NOT begin with a remark (#) to the text
+	"newLine".
+	
+	NOTES:
+		* The sed command must be between single quotes ('') and not double qoutes otherwise
+		bash itself will process the exclamation mark (!) instead of sed.
+		* The ! mark means "NOT".
+		* The structure of this command in general is:
+
+			sed '/expression_to_ignore/!{a_standard_sed_expression}' file
+			
+=========================================================================================================
+* sed '/#/!{s/\(.*user.*\)/#\ \1/g}' file
+
+	as above, only put the line with 'user' behind a remark (instead of changing it completely)
+=========================================================================================================
+* shopt
+
+	sets all kinds of settings for a user such as: allow aliases inside scripts or not, allow email
+	alerts or not and more ...
+
+=========================================================================================================
+* mkhomedir_helper user_name umask_perms skel_files_location
+
+  e.g.
+
+  mkhomedir_helper user 0077 /etc/skel
+
+	create a home dir for a user	
+
+=========================================================================================================
+* grep noc@org.il maillog | awk '{ if ($3>"08:00:00" && $3<"08:10:00") print $0}'
+
+	use awk+grep to print only records of mail sent by/to "noc@org.il" between 8:00-8:10am.
+
+=========================================================================================================
+* awk '$4>"[05/May/2014:08:50:" && $4<"[05/May/2014:11:05:"' /var/log/httpd/access_log
+
+	find records between a specific time range inside a log file.
+	(the structure of the file must be accurate and identical to the format to search for)
+
+=========================================================================================================
+* for i in $(find . -name "settings.php" -exec dirname {} \;); do echo $i; done
+
+	run a command on an output from a find+exec command
+	can be used to get a list of dirs and run a command inside them for example
+
+=========================================================================================================
+* for file in `ls -rt` do echo ${file}; done
+
+	loop through 'ls' output and print file names
+
+=========================================================================================================
+* for i in `cat users-list.txt`; do groupadd $i; done
+
+	add several groups at once using a newline delimited list
+
+=========================================================================================================
+* for i in $(echo one two three); do useradd $i; done
+
+	add several users at once using a space delimited string
+
+=========================================================================================================
+* pwd -P
+	
+	find the real location of the symbolic link we are in
+
+=========================================================================================================
+* \rm
+
+	the slash (\) makes bash skip the alias by that name (if present) and run the original bin 
+	file as-is instead
+
+=========================================================================================================
+* cat list.txt | xargs -I {} ls {}
+
+	use xargs to check for existance of a list of files inside the current directory
+
+=========================================================================================================
+* ls -t *.gz | xargs -I {} tar -tvf {} | grep "a file name"
+
+	use xargs , tar and grep to find a file inside a group of compressed .gz/.tar files
+
+=========================================================================================================
+* ls | grep .*17-8.* | xargs -I {} cp {} /dest
+
+	copy a grep filtered list of files to '/dest'.
+	xargs -I {} sets the reference name of each output line so it could be used at the middle of 
+	the new command rather than at the end of it (which is the default).
+
+=========================================================================================================
+* ls /etc/yum.repos.d | xargs -I {} mv {} {}.dis
+
+	use xargs to rename multiple files at once.
+
+=========================================================================================================
+* rpm -qa | grep php | xargs yum remove -y
+
+	xargs - run a new command based on output from a previous command or a set of commands
+
+=========================================================================================================
+* ls | xargs -I {} find {} -mtime +30
+
+	use xargs to find files older than 30 days
+
+=========================================================================================================
+* stat <file>
+
+	show extended file info
+
+=========================================================================================================
+* stat -c '%x %z %n' <file>
+
+	show filtered file info
+
+	%x - time of last access
+	%z - time of last change
+	%n - name of file
+
+=========================================================================================================
+* reset
+
+	resets the console (not the machine!)
+	useful when the console appearance gets scambled after handling data/files with special chars
+
+=========================================================================================================
+* { time <command>;} 2>/tmp/time-output.txt
+
+	save 'time' output to a file
+
+	* the space after the '{' is MANDATORY.
+	* time sends output to stderr so a redirect to '2' is needed.
+
+=========================================================================================================
+* time ls
+
+	checks how long does it take for a command to run
+
+=========================================================================================================
+* watch "ls -l | wc"
+
+	run a command every 2 seconds.
+ 	
+	* can be changed by specifying '-n <seconds>'
+	* highlight changes between runs by specifying '-d'
+
+=========================================================================================================
+* lsblk
+
+	show a map of block devices available to the system (including disk and partitions, cdroms).
+
+=========================================================================================================
+* ls -ltr | awk '{if ($7==5) system("cp " $9 " /tmp")}'
+
+	run a system command from within awk (after filtering data).
+
+=========================================================================================================
+* ls -ltr
+
+	list files by the newest date
+
+=========================================================================================================
+* tail -f error_log
+	
+	watch live updates of the file 'error_log'
+
+=========================================================================================================
+* BASH TIP
+
+	to create a command based on data from another variable use the following way:
+	
+	If for example the variable is called 'DATA_VAR' and its value is
+
+		DATA_VAR=myFile.txt
+
+	then create the command inside a variable between apostrophes (''), keeping the other variable
+	out of them (use 2 sets of apostrophes) but WITHOUT any spaces like so:
+
+		CMD='cat '$DATA_VAR' | grep 192.168'
+
+	to run in, use 'echo':
+
+		echo $CMD | bash
+
+=========================================================================================================
+* BASH TIP
+
+	to run a complex command inside a bash script use the following way (otherwise there will be
+	problems with the output of the command):
+
+	1. Put the complex command inside a variable between apostrophes ('').
+
+	Example:
+
+		CMD='cat /etc/hosts | grep "192.168"'
+
+	2. Run the command by putting the variable created in step 1 through bash:
+
+		echo $CMD | bash
+
+
+	NOTE: to save the output to a variable, use the back-apostrophe char (``) like so:
+
+		OUTPUT=`echo $CMD | bash`
+
+=========================================================================================================
+* BASH TIP
+
+	Debugging a script using 'bash -v'
+
+	putting "#!/bin/bash -v" at a start of a script make bash show every line of code before it 
+	is being executed thus allowing easy debugging - batch 'echo on' equivalent.
+
+=========================================================================================================
+* chage
+	
+	set users passwords policies
+
+
+=========================================================================================================
+* find <an_existing_file_or_dir> -mtime +30
+
+	check if a file or dir was changed in the last 30 days
+
+=========================================================================================================
+* find . -type d -name "styles" | grep "files/styles" | xargs du -hs . | sort -h
+
+=========================================================================================================
+* find . -name "*.txt" -mmin -10
+	
+	find text files changed in the last 10 minutes	
+
+=========================================================================================================
+* find . -type d
+
+	find all directories starting from current dir.
+
+=========================================================================================================
+* find . -user root
+
+	find files owned by root
+
+=========================================================================================================
+* find . -iname "*.TXT"
+
+	find files with either capital or small 'txt' suffix.
+	the '-iname' expression means 'case in-sensitive'
+	
+=========================================================================================================
+* find . -name "*.TXT" -exec bash -c 'mv $0 ${0/TXT/txt}' {} \;
+
+	find files with capital 'TXT' suffix and rename them to small 'txt' suffix.
+
+	the 'exec' part explained:
+
+	bash -c: required because the command is too complex for find to understand as-is.
+	$0: the name of the current found file inside bash
+	${0/TXT/txt}: a 'sed' like replace pattern only on variables - 
+		${var_name_to_work_on/str_to_find/str_to_replace}
+	{}: the name of the current found file inside find
+	\;: the exec expression requires ending with ';'. the slash is an escape char and needed
+	so that bash won't process it itself.
+
+=========================================================================================================
+* find /data -name 'settings.php' -print -exec grep db_url {} \;
+
+	search inside the dir '/data' a file called 'settings.php' and if found, print its pull path on
+	the screen along side with all lines inside it starting with 'db_url'.
+
+=========================================================================================================
+* find . -name ".htaccess" -exec ls -lh {} \; | awk '{print $5" "$9}' | sort -hr | more
+
+	like below, but also sort by size from largest to smallest and stop after the screen is full.
+
+=========================================================================================================
+* find . -name ".htaccess" -exec ls -lh {} \; | awk '{print $5" "$9}'
+
+	like below, but print only the size and name of the files (the single space string " " is needed
+	to devide the two fields and show a readable output of them).
+
+=========================================================================================================
+* find . -name settings.php*? -exec sh -c 'mv {} `get-backup-folder.sh`/$(basename {})-`$DATE`' \;
+
+	find files named settings.php with at least one extra char after the extension (the basic
+	name 'settings.php' will be ignored), move the file to a directory which path is returned 
+	by the script 'get-backup-folder.sh', and rename it by adding the current date to it 
+	(gotten via the $DATE variable)
+	
+=========================================================================================================
+* find . -name ".htaccess" -exec ls -lh {} \;
+
+	find all htaccess files from current location and deeper and show info about them.
+
+=========================================================================================================
+* cd -
+
+	go to the previous dir I was in before the current one
+
+=========================================================================================================
+* vmstat -S M
+
+	Show a summery of all system's aspects usage (memory,cpu,io,processes)
+
+=========================================================================================================
+* nl <file_name>
+
+	shows the file with line numbers
+
+=========================================================================================================
+* /etc/environment
+
+	This is a GLOBAL system wide settings file.
+
+	It can be used to setup global settings for all the users on the system.
+
+	e.g proxy settings, global environment variables etc.
+
+=========================================================================================================
+* Redirect output:
+
+	1=STDOUT
+	2=STDERR
+
+	strace cp 1>&2 2>/tmp/myFile
+
+=========================================================================================================
+* Get info about partitions and disks:
+
+	udevadm info -q all -n /dev/sda1
+
+	udevadm info -q all -n /dev/sda
+
+=========================================================================================================
+* Changing the default color of dirs (RED HAT only):
+
+	1. edit the file /etc/DIR_COLORS.
+	2. change the colors of the items you want (e.g. change the DIR color from blue to purple by changing the
+	value '34' to '35').
+	3. logout and login again for the changes to take effect.
+
+=========================================================================================================
+* Setup a proxy that will be used via the command line:
+
+	1. start a bash shell
+	2. run the following commands (for example):
+		export http_proxy=http://192.168.174.80:8080
+		export https_proxy=http://192.168.174.80:8080
+		export ftp_proxy=http://192.168.174.80:8080
+		export no_proxy="127.0.0.1,192.168.1.1"
+
+=========================================================================================================
+
+* Reset a root password:
+
+	1. get a livecd of the system you wish to recover and start the pc from it
+	(if there isn't one, get a similar version e.g redhat->centos etc.)
+	2. mount the partition of the '/' fs you wish to recover
+	3. create a new password for a user inside the livecd (doesn't matter which user)
+	4. edit the /etc/shadow of the live cd fs and the /etc/shadow of the mounted fs
+	5. replace the mounted fs root user hash with the hash created for the user 
+	on the live cd fs (step 3, locate the line with the name of the user you selected)
+	6. save the file
+	7. reboot normally and use the password you created in step 3.
+
+=========================================================================================================
+
+* Check the size of hidden files and directories:
+	
+	1. go to the desired location
+	2. run the command 'du -hs .??*'
+
+	explanation: the question mark means 'one char'. 2 question marks force bash
+	to omit the phrase ".." which means "all previous dirs" (it's ALL because
+	bash will work on the ".." of the previous dir as well and so on...)
+
+	
+=========================================================================================================
+
+* VI TIP
+
+	copy and paste with VI:
+
+	Cut and paste: 
+
+	1.Position the cursor where you want to begin cutting. 
+	2.Press v (or upper case V if you want to cut whole lines). 
+	3.Move the cursor to the end of what you want to cut. 
+	4.Press d. 
+	5.Move to where you would like to paste. 
+	6.Press P to paste before the cursor, or p to paste after. 
+
+	Copy and paste can be performed with the same steps, only pressing y instead of d in step 4. 
+
+	The name of the mark used is related to the operation (d:delete or y:yank). 
+
+	----------------------------
+
+	go to start - press v
+	go to end - press y to copy or d to move
+
+	go to destiny - press p
+
+==============================================================================================
+
+ * mysql - set a new password for a user:
+
+	SET PASSWORD FOR 'user-name-here'@'hostname-name-here' = PASSWORD('new-password-here');
+
+==============================================================================================
+
+* Calculate number of chars of a variable
+
+	MY_VARIABLE=this_is_my_var
+
+	COUNT=${#MY_VARIABLE}
+
+	echo $COUNT # outputs 14
+
+==============================================================================================
+
+* Print "\n" in bash:
+
+	echo ""
+
+==============================================================================================
+
+* Read file line by line in Bash:
+
+	while read line           
+	do           
+    	echo $line
+           
+	done <file_name
+
+==============================================================================================
+
+* Print a TUI calendar
+
+	cal
+
+==============================================================================================
+
+* Log every command a user runs
+	
+	setup the following variable in the user's (or in global file to affect the whole system)
+	settings file (e.g .bashrc etc):
+
+	PROMPT_COMMAND='history -a >(logger -t "$USER[$PWD] $SSH_CONNECTION")'
+
+
+	The commands will be saved to "/var/log/messages"
