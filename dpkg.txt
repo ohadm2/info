@@ -1,0 +1,54 @@
+Work on already installed pkgs
+-------------------------------------------------
+
+# install a deb file
+
+dpkg -i debian_file.deb
+
+# reconfigure a package
+
+dpkg-reconfigure <pkg_name>
+
+
+# List files inside a pkg
+
+dpkg-query -L <pkg_name>
+
+
+# Find package that installed a file (search only in currently installed pkgs)
+
+dpkg --search filename
+
+
+# List all packages
+
+dpkg --list
+
+
+Work on local deb files
+-------------------------------------------------
+
+# List files inside a pkg
+
+dpkg -c ./myDebFile.deb
+
+
+
+Work on remote repo pkgs
+-------------------------------------------------
+
+# pre-req
+
+apt-get install apt-file
+
+apt-file update
+
+
+# Find package that provides a particular file (search in all repo)
+
+apt-file search filename
+
+
+# List files inside a pkg
+
+apt-file list <pkg_name>

@@ -1,0 +1,35 @@
+
+
+In Ubuntu:
+-------------------
+
+1. enable core dumps:
+
+     ulimit -c unlimited
+     
+     verify:
+             ulimit -c
+             
+             (a '0' as an answer means: NOT enabled)
+             
+2. generate the core dump by running the crashing program
+
+3. cores are located at:  /var/crash/ 
+  
+    -> the .crash files are text files. you can view them with a normat text editor also
+
+4. install core dumps analyzer 'apport-retrace':
+
+    sudo apt install apport-retrace
+
+5. edit the crash file and add a new "Package" line at the start of it
+
+  -> sudo nano _usr_bin_sudo.0.crash
+  
+    add the line 'Package: sudo' at the top of the file and save it
+
+6. run the dumps analyzer 'apport-retrace' along with gdb:
+
+    sudo apport-retrace -g _usr_bin_sudo.0.crash
+    
+7. analyze ...
