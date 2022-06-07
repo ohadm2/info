@@ -1,0 +1,125 @@
+How to configure postfix on a server (allows sending mail via the tool 'sendmail' which is in use by PHP as well):
+====================================================================================================================
+
+* install postfix (if not already installed...use the next step to check status)
+
+
+* edit postfix config file /etc/postfix/main.cf
+
+
+* setup the following parameters:
+
+
+	# from whom 
+
+	myhostname = mail.co.il
+
+	# which server to use for sending mails (mail relay)
+
+	relayhost = 192.168.1.1
+
+	# disable ipv6 (change the default value which is set on 'all')
+
+	inet_protocols = ipv4
+	
+	# check the mydestination parameter (must be empty):
+	
+	mydestination = 
+
+
+* restart postfix:
+
+	/etc/init.d/postfix restart
+
+
+
+* test mail delivery:
+
+	via sendmail:
+
+		sendmail user@mail.co.il < file-to-send.txt
+
+		Notes:
+
+			* If the file has dots (.) in it, add the -i switch to ignore them (otherwise the dot will end the data 
+			stream - see SMTP protocol details.)
+			* In this example, the content of the file "file-to-send.txt" will be sent as a letter CONTENT rather than
+			an attached file (so the "txt" suffix is NOT required here).
+			* to make the sent mail a bit more aesthetic, one can add the following lines at the top of the file:
+
+				from: user@mail.co.il
+				
+to: user@mail.co.il
+				subject: mySubject
+
+	via php:
+
+		php -r "mail('user@mail.co.il','subject','body');"
+
+
+	Conditions:
+		
+		* If a file is being sent, it MUST have ".txt" suffix OR it MUST be a zipped file WITH a password.
+
+
+* check the logs for a healthy process:
+
+	tail /var/log/maillog
+
+
+	Notes:
+
+		* if the log shows the word "queued", it means that the mail was successfully sent to the SMTP server and it is 
+		waiting for its turn to be sent.
+
+		* if the word "removed" is shown AFTER the word "queued" that's OK too and it is NOT an error.
+		
+		* if there is an error, make sure that the sender name is <some-random-number>@mail.co.il and NOT
+		 <some-random-number>@<some-domain>.mail.co.il. If it is the latter, it means that the field "myhostname"
+		 explained above has a WRONG value and needs to be corrected (NO postfix service restart is needed after the update).
+
+
+* DEBUG via telnet:
+
+	* if there are still problems with sending the mail via a mail client, try using the SMTP protocol DIRECTLY via TELNET
+	 like so (type the following EXACTLY as-is one by one [WITHOUT the arrows ...]):
+
+		-> telnet <smtp-server-ip> 25
+		
+			-> if this fails you have a network problem ...
+
+		-> ehlo myserver.mail.co.il
+
+		-> mail from: myserver@mail.co.il
+
+		-> rcpt to: user@mail.co.il, someone-else@mail.co.il (replace with your actual recipient name(s))
+
+		-> to write the message, type "data"
+
+		-> after that set a subject by writing:
+		
+			Subject: My Telnet Test Email
+		
+		-> type the letter itself (letter content): 
+		
+			Hello,
+
+			This is an email sent by using the telnet command.
+
+			Your friend,
+			
+			Me
+		
+		-> when done, type a dot (.) once FOLLOWED by ENTER:
+			
+			.
+
+		-> at this point the letter will be queued at the SMTP server
+
+			-> type "quit" to exit telnet.
+
+
+
+
+
+
