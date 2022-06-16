@@ -389,9 +389,10 @@ python / pip:
 			-> add the lines:  
           
           [global]
-          index-url = https://site-to-exclude-address:port/simple
-          trusted-host = site-to-exclude-address #(only address - no schema and no port)
+          index-url = https://repo-address-to-exclude:port/simple
+          trusted-host = repo-address-to-exclude #(only address - no schema and no port)
 
+      -> can be also set via command line arg (needed multiple times). e.g. : pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pypi.org aiohttp
 
 php:
 	
