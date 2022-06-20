@@ -151,9 +151,6 @@ k rollout restart deployment my-namespace-api
 k rollout restart deployment my-namespace-worker
 k rollout restart deployment my-namespace-collector
 
-
-
-
 k edit deployment my-namespace-collector
 
 
@@ -355,7 +352,7 @@ export T=$(cat /run/secrets/kubernetes.io/serviceaccount/token)
 wget --header="Authorization: Bearer $T" --no-check-certificate -S -O - https://10.100.200.1/api/v1/namespaces/test-ohadm/pods
 wget --header="Authorization: Bearer $T" --no-check-certificate -S -O - https://10.100.200.1/api/v1/endpoints
 
-
+k autoscale nginx --min=2 --max=5 --cpu=80
 
 
 
