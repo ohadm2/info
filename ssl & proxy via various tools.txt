@@ -625,7 +625,7 @@ JAVA:
           
           -> Windows: set JAVA_TOOL_OPTIONS=-Dhttp.proxyHost=192.168.123.45 -Dhttp.proxyPort=8080 -Dhttp.nonProxyHosts="localhost|cr.vcloud.gov.il" -Dhttps.proxyHost=192.168.123.45 -Dhttps.proxyPort=8080 -Dhttps.nonProxyHosts="localhost|cr.vcloud.gov.il"
 
-          -> Linux: export JAVA_TOOL_OPTIONS=-Dhttp.proxyHost=192.168.123.45 -Dhttp.proxyPort=8080 -Dhttp.nonProxyHosts="localhost|cr.vcloud.gov.il" -Dhttps.proxyHost=192.168.123.45 -Dhttps.proxyPort=8080 -Dhttps.nonProxyHosts="localhost|cr.vcloud.gov.il"
+          -> Linux: export JAVA_TOOL_OPTIONS='-Dhttp.proxyHost=192.168.123.45 -Dhttp.proxyPort=8080 -Dhttp.nonProxyHosts="localhost|cr.vcloud.gov.il" -Dhttps.proxyHost=192.168.123.45 -Dhttps.proxyPort=8080 -Dhttps.nonProxyHosts="localhost|cr.vcloud.gov.il"'
 
         -> VERY IMPORTANT! Do NOT use a schema with java command line options (e.g. -Dhttp.proxyHost=http://192.168.123.45 with the host param)! It won't work!
 
