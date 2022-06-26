@@ -1,0 +1,612 @@
+##############################
+# Important Note!!!!!
+##############################
+# This pipeline cannot automatically assign the right yaml file / yaml section to the right dockerfile.
+# Therefore, in order to give the right name to the right image, make sure that the yaml file / yaml section is aligned with the correct Dockerfile 
+# meaning - the image that is first reffered to in a yaml file needs its Dockerfile to be also the first in the Dockerfiles array and so on ...
+
+pool:
+  name: DockerPool
+
+variables:
+  - name: OrganizationProxyFullURL
+    value: 'http://192.168.1.1:3128'
+  - name: GitReposArray
+    value: "https://github.com/aquasecurity/kube-bench.git"
+  - name: YamlsArray
+    #value: "https://raw.githubusercontent.com/aquasecurity/kube-bench/main/job.yaml item2 item3 item4"
+    value: "https://raw.githubusercontent.com/aquasecurity/kube-bench/main/job.yaml"
+  - name: DockerFilesArray
+    value: "https://raw.githubusercontent.com/aquasecurity/kube-bench/main/Dockerfile"
+  - name: Email
+    value: owner@org.il
+  - name: DockerImagesRepoUrl
+    value: my-repository.local:8888
+  - name: OtherGeneralFilesBasicServerUrl
+    value: https://my-writable-web.local/files
+  - name: AquaServerUrl
+    value: http://192.168.1.2
+  - name: DockerfilesProxyUpdaterScriptFileName
+    value: docker-files-updater-v1.25.sh
+  - name: MainProxyScriptFileName
+    value: all-v2.25.sh 
+  - name: DeploymentCategory
+    value: security
+  - name: K8sServiceAccountToCreate
+    value: generic-k8s-deployments-creator-sa
+  - name: K8sImagePullSecretToCreate
+    value: generic-k8s-deployments-creator-pull-secret
+  - name: K8sRoleAndRoleBindingToCreate
+    value: generic-k8s-deployments-creator-role    
+  - name: PspSecretAndExtraSettingsYamlTemplateFileName
+    value: azure-generic-pipeline-extra-data-template.yaml
+  - name: PkiCertPublicPartFileName
+    value: public.pem
+  - name: PkiCertPrivatePartFileName
+    value: private.key
+  - name: PkiCertValidityInDays
+    value: 120
+  - name: PkiCertSubjectString
+    value: /C=IL/ST=JER/L=IL/O=MYORG/OU=MYOU
+  - name: ReadyToUseYamlFileArtifactDirName
+    value: DropDir
+  - name: K8sNamespaceToCreateOrUse
+    value: my-namespace
+  - name: ProjectName
+    value: kube-bench
+  - name: valuesFileName
+    value: kube-bench.kv
+  - name: ParametersNamesArr
+    value: "GitReposArray YamlsArray DockerFilesArray K8sNamespaceToCreateOrUse DeploymentCategory ProjectName"
+
+jobs:
+- job: GetFilesAndBuildImages
+  pool:
+      name: DockerPool
+  variables:
+    ExternalSourcesFolderName: data-from-non-local-git
+    InternalSourcesFolderName: data-from-local-git
+
+  steps:
+  - bash: |
+      echo "=============================================================="
+      echo "$(date +"%Y-%m-%d %H:%M:%S") - INFO  - Script started"
+      echo "=============================================================="
+
+      echo "Trying to get values from file '$(valuesFileName)' ..."
+
+      if [ -s "$(valuesFileName)" ]; then
+            for i in $(ParametersNamesArr)
+            do
+                  # xargs will trim the spaces and the tr is needed in cases where the value in file contains quotes
+                  NEW_VALUE=$(cat $(valuesFileName) | grep $i | awk -F: '{print $2}' | xargs | tr -d "\"" | tr -d "'")
+
+                  #echo $NEW_VALUE
+                  #echo $i
+
+                  if ! [ "$NEW_VALUE" == "" ]; then
+                      echo "Setting a new value for variable '$i' from file '$(valuesFileName)' ..."
+
+                      echo "##vso[task.setvariable variable=$i;]$NEW_VALUE"
+                      
+                      NEW_VALUE=""
+                  fi
+            done
+      else
+          echo "The file '$(valuesFileName)' was not found. Using local parameters."
+      fi
+
+    displayName: 'optional - get values from file'
+    enabled: true    
+
+  - bash: |
+      mkdir $(ExternalSourcesFolderName)
+      
+      # for processing local Dockerfiles - a folder is required
+      mkdir $(InternalSourcesFolderName)
+      
+      echo ${{ variables.GitReposArray }}
+
+      for url in ${{ variables.GitReposArray }}
+      do
+          echo "=============================================================="
+          echo "Trying to use git to get the repo '$url' ..."
+          echo "=============================================================="
+          
+          git clone $url $(ProjectName)-$(Build.BuildId)
+          
+          mv -v $(ProjectName)-$(Build.BuildId)/* $(ExternalSourcesFolderName)
+
+          cd $(ExternalSourcesFolderName)
+
+          rm Dockerfile*
+      done
+      
+      pwd
+      ls
+    displayName: 'get repos'
+    #failOnStderr: true
+    enabled: true
+
+  - bash: |
+      YAML_FILES_LOCAL=''
+
+      echo "yamls array content: ${{ variables.YamlsArray }}"
+
+      echo "=============================================================="
+      echo "Current directory is:"
+      echo "=============================================================="
+      pwd
+
+      for url in ${{ variables.YamlsArray }}
+      do
+          NAME_ONLY=$(basename $url)
+          CURRENT_FILE_COUNTER=1
+
+          echo
+          echo "===================================================================================================================="
+          echo "Trying to use wget to download the file '$url' as a file named '$CURRENT_FILE_COUNTER-$NAME_ONLY'..."
+          echo "===================================================================================================================="
+          
+          ls -l
+          #rm -v $NAME_ONLY
+          
+          echo 'DEBUG: about to run the command: wget -e use_proxy=on -e https_proxy='$(VcloudProxyFullURL)
+          echo ' -e check_certificate=off -e http_proxy='$(VcloudProxyFullURL)' -L '$url' -O '$CURRENT_FILE_COUNTER'-'$NAME_ONLY' ...'
+
+          wget -e use_proxy=on -e https_proxy=$(VcloudProxyFullURL) -e check_certificate=off -e http_proxy=$(VcloudProxyFullURL) -L $url -O $CURRENT_FILE_COUNTER-$NAME_ONLY
+
+          # if the wget cmd fails
+          if ! [ "$?" -eq 0 ]; then
+              # check if the yaml file is local - if it is also not local - mark the step as failed
+              if ! [ -s "$NAME_ONLY" ]; then
+                  echo "##vso[task.setvariable variable=task.GetYamls.status]Failure"
+                  exit 1
+              fi
+          fi
+          
+          YAML_FILES_LOCAL="$YAML_FILES_LOCAL $CURRENT_FILE_COUNTER-$NAME_ONLY"
+
+          let CURRENT_FILE_COUNTER=CURRENT_FILE_COUNTER+1
+      done
+      
+      pwd
+      ls -l
+
+      echo "##vso[task.setvariable variable=YAML_FILES_GLOBAL]$YAML_FILES_LOCAL"
+
+      echo "##vso[task.setvariable variable=task.GetYamls.status]Success"
+    displayName: 'get yaml files'
+    #failOnStderr: true
+    enabled: true
+
+  - bash: |
+      #(set -x
+
+      IMAGES_ARR_WITH_FULL_TAGS_LOCAL=''
+
+       CURRENT_IMAGE_SERIAL_NUMBER=1
+
+      # a check to see if any Dockerfiles are involved in current deployment / system. If there are not Dockerfiles, we need to get the
+      # images referenced in the given yaml files directly and use them as-is
+      if [ "${{ variables.DockerFilesArray }}" == "" ]; then
+          PROCESS_IMAGES_FROM_YAMLS_DIRECTLY='true'
+      else
+          PROCESS_IMAGES_FROM_YAMLS_DIRECTLY='false'
+      fi
+
+      ALL_YAMLS_AS_ONE_FILE_NAME_LOCAL=$(PspSecretAndExtraSettingsYamlTemplateFileName)
+
+      for yaml in $(YAML_FILES_GLOBAL)
+      do 
+          if ! [ "$yaml" == "" ]; then
+            if [ -s "$yaml" ]; then
+                echo "======================================================================================"
+                echo "Currently working on yaml file '$yaml' ..."
+                echo "======================================================================================"
+
+                echo "DEBUG (grep the yaml file '$yaml'): "
+                cat $yaml | grep "image:\ "
+                
+                cat $yaml
+
+                # we actually need BOTH types of names lists in parallel because we might need to get images directly from the yaml files and if that is the case then we need the names and tags in their original format
+                # get original images names
+                IMAGES_NAMES_WITH_ORIGINAL_TAGS=$(cat $yaml | grep "image:\ " | awk -F: '{print $2":"$3}' | awk -F/ '{print $NF}' | sort -u | tr "\r\n" " ")
+                # get images name but put the original tags as part of the name so that the original version won't be lost on one hand and on the other so we could add our own tag to the image which is the build number
+                IMAGES_NAMES_WITH_ORIGINAL_TAGS_AS_PART_OF_THE_NAME=$(cat $yaml | grep "image:\ " | awk -F: '{print $2"-"$3}' | awk -F/ '{print $NF}' | sort -u | tr "\r\n" " ")
+
+                if ! [ "$IMAGES_NAMES_WITH_ORIGINAL_TAGS_AS_PART_OF_THE_NAME" == "" ]; then
+                    echo "======================================================================================"
+                    echo "Found the following images names inside the downloaded yaml files:"
+                    echo "======================================================================================"
+                    echo "$IMAGES_NAMES_WITH_ORIGINAL_TAGS_AS_PART_OF_THE_NAME"
+
+                    echo
+                    echo "======================================================================================"
+                    echo "Fixing settings in the yaml file '$yaml' ..."
+                    echo "======================================================================================"
+
+                    for i in $IMAGES_NAMES_WITH_ORIGINAL_TAGS_AS_PART_OF_THE_NAME
+                    do
+                        FULL_IMAGE_PATH_IN_NEXUS="$(DeploymentCategory)/$(ProjectName)/$i:$(Build.BuildId)"
+                        
+                        if [ "$PROCESS_IMAGES_FROM_YAMLS_DIRECTLY" == "true" ]; then
+                            echo "Dockerfiles were not found for this deployment. Processing the images directly from the yaml files ..."
+
+                            ORIGINAL_IMAGE_NAME=$(echo $IMAGES_NAMES_WITH_ORIGINAL_TAGS | cut -d " " -f $CURRENT_IMAGE_SERIAL_NUMBER)
+
+                            if ! [ "$ORIGINAL_IMAGE_NAME" == "" ]; then
+                                docker pull $ORIGINAL_IMAGE_NAME
+                                docker tag $ORIGINAL_IMAGE_NAME $(NexusDockerRepoUrl)/$FULL_IMAGE_PATH_IN_NEXUS
+                            fi
+
+                            let CURRENT_IMAGE_SERIAL_NUMBER=CURRENT_IMAGE_SERIAL_NUMBER+1
+                        fi
+
+                        echo
+                        echo "Fixing Nexus location (using image path: '$(DeploymentCategory)/$(ProjectName)/$i') and adding SA settings and pullSecret refference ..."
+                        
+                        # get the number of spaces to add after adding the new section
+                        NUM_OF_SPACES_NEEDED=$(cat $yaml | grep containers | grep -o "^[\ ]*" | awk '{print length}')
+                        
+                        SPACES=$(printf ' %.0s' `eval echo {1..$NUM_OF_SPACES_NEEDED}`)
+
+                        sed -i "s/containers:.*/serviceAccountName:\ "$(echo $(K8sServiceAccountToCreate))"\n\ \ \ \ \ \ imagePullSecrets:\n\ \ \ \ \ \ \-\ name:\ "$(echo $(K8sImagePullSecretToCreate))"\n${SPACES}containers:/" $yaml
+                        sed -i "s/image:.*/image:\ "$(echo $(NexusDockerRepoUrl)/$FULL_IMAGE_PATH_IN_NEXUS | sed 's/\./\\\./g' | sed 's/\//\\\//g')"/" $yaml
+                      
+                        #echo "$NexusDockerRepoUrl/$FULL_IMAGE_PATH_IN_NEXUS" >> images.txt
+                        IMAGES_ARR_WITH_FULL_TAGS_LOCAL="$IMAGES_ARR_WITH_FULL_TAGS_LOCAL $(NexusDockerRepoUrl)/$FULL_IMAGE_PATH_IN_NEXUS"
+                    done
+                else
+                    echo "Warning: the variable 'IMAGES_NAMES_WITH_ORIGINAL_TAGS_AS_PART_OF_THE_NAME' is empty so it will be ignored."
+                fi
+
+                echo "---" >> $ALL_YAMLS_AS_ONE_FILE_NAME_LOCAL
+                cat $yaml >> $ALL_YAMLS_AS_ONE_FILE_NAME_LOCAL
+            else
+                  echo "Warning: the file '$yaml' is empty or does not exist so it will be ignored."
+            fi
+        else
+            echo "Warning: the parameter given as a yaml file is empty so it will be ignored."
+        fi
+      done
+
+      # it is relevant to export images tags and to assign a secret and a psp object to them only if images were actually found inside the given yaml files...
+      if ! [ "$IMAGES_NAMES_WITH_ORIGINAL_TAGS_AS_PART_OF_THE_NAME" == "" ]; then
+          # export images tags to the rest of the pipeline
+          echo "##vso[task.setvariable variable=IMAGES_ARR_WITH_FULL_TAGS_GLOBAL;isOutput=true;]$IMAGES_ARR_WITH_FULL_TAGS_LOCAL"
+
+          echo "======================================================================================"
+          echo "Creating a new secret for Nexus and PSP objects ..."
+          echo "======================================================================================"
+
+          # update the additional inner yamls
+          REG_SECRET_PATTERN='{"auths":{"<registry-fqdn-and-port>":{"username":"<username>","password":"<password>","email":"<email>","auth":"<base64-of-username-colon-password>"}}}'
+
+          AUTH_PART=$(echo $(NexusUserName):$(NexusPassword) | base64 -w 0)
+
+          REG_SECRET_PATTERN=$(echo $REG_SECRET_PATTERN | sed "s/<registry-fqdn-and-port>/"$(echo $(NexusDockerRepoUrl) | sed 's/\//\\\//g')"/")
+          REG_SECRET_PATTERN=$(echo $REG_SECRET_PATTERN | sed "s/<username>/"$(echo $(NexusUserName))"/")
+          REG_SECRET_PATTERN=$(echo $REG_SECRET_PATTERN | sed "s/<password>/"$(printf "%q" $(NexusPassword))"/")
+          REG_SECRET_PATTERN=$(echo $REG_SECRET_PATTERN | sed "s/<email>/"$(echo $(Email))"/")
+
+          REG_SECRET_PATTERN=$(echo $REG_SECRET_PATTERN | sed "s/<base64-of-username-colon-password>/"$(echo $AUTH_PART)"/")
+
+          REG_SECRET_PATTERN_BASE_64=$(echo $REG_SECRET_PATTERN | base64 -w 0)
+
+          echo "======================================================================================"
+          echo "REG_SECRET_PATTERN=$REG_SECRET_PATTERN"
+          echo "REG_SECRET_PATTERN_BASE_64=$REG_SECRET_PATTERN_BASE_64"
+          echo "======================================================================================"
+          echo
+          #echo "======================================================================================"
+          #echo "file '$ALL_YAMLS_AS_ONE_FILE_NAME_LOCAL' before editing:"
+          #echo "======================================================================================"
+
+          #cat $ALL_YAMLS_AS_ONE_FILE_NAME_LOCAL
+          
+          echo "sed #1:"
+          echo "DEBUG: Running: sed -i \"s/<base64-json>/\"$(echo $REG_SECRET_PATTERN_BASE_64)\"/\" $ALL_YAMLS_AS_ONE_FILE_NAME_LOCAL\""
+          sed -i "s/<base64-json>/"$(echo $REG_SECRET_PATTERN_BASE_64 | sed 's/\//\\\//g')"/" $ALL_YAMLS_AS_ONE_FILE_NAME_LOCAL
+          echo "sed #2:"
+          sed -i "s/<namespace-name>/"$(echo $(K8sNamespaceToCreateOrUse))"/" $ALL_YAMLS_AS_ONE_FILE_NAME_LOCAL
+          echo "sed #3:"
+          sed -i "s/<docker-registry-secret-name>/"$(echo $(K8sImagePullSecretToCreate))"/" $ALL_YAMLS_AS_ONE_FILE_NAME_LOCAL
+          echo "sed #4:"
+          sed -i "s/<service-account-name>/"$(echo $(K8sServiceAccountToCreate))"/" $ALL_YAMLS_AS_ONE_FILE_NAME_LOCAL
+          echo "sed #5:"
+          sed -i "s/<role-name>/"$(echo $(K8sRoleAndRoleBindingToCreate))"/" $ALL_YAMLS_AS_ONE_FILE_NAME_LOCAL
+          echo "sed #6:"
+          sed -i "s/<role-binding-name>/"$(echo $(K8sRoleAndRoleBindingToCreate)-binding)"/" $ALL_YAMLS_AS_ONE_FILE_NAME_LOCAL
+
+          #echo "======================================================================================"
+          #echo "file '$ALL_YAMLS_AS_ONE_FILE_NAME_LOCAL' after editing:"
+          #echo "======================================================================================"
+
+          #cat $ALL_YAMLS_AS_ONE_FILE_NAME_LOCAL
+
+          # generate one big yaml to upload to nexus
+          #cat $ALL_YAMLS_AS_ONE_FILE_NAME_LOCAL >> $ALL_YAMLS_AS_ONE_FILE_NAME_LOCAL
+      fi
+ 
+      echo "======================================================================================"
+      echo "full file '$ALL_YAMLS_AS_ONE_FILE_NAME_LOCAL':"
+      echo "======================================================================================"      
+
+      cat $ALL_YAMLS_AS_ONE_FILE_NAME_LOCAL
+
+       # add a build id to the filename so that the upload job ahead won't overwrite the updated file
+       # mv $ALL_YAMLS_AS_ONE_FILE_NAME_LOCAL $(Build.BuildId)-$ALL_YAMLS_AS_ONE_FILE_NAME_LOCAL
+      
+      # the build id will be added to the file name later before uploading it to the repo
+      echo "##vso[task.setvariable variable=ALL_YAMLS_AS_ONE_FILE_NAME_GLOBAL;isOutput=true;]$ALL_YAMLS_AS_ONE_FILE_NAME_LOCAL"
+
+      pwd
+
+      #)
+
+    displayName: 'update settings in yaml files and generate one yaml for all'
+    condition: eq(variables['task.GetYamls.status'], 'success')
+    name: UpdateAndConcatYamls
+    enabled: true
+    
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: '$(Build.Repository.LocalPath)/$(UpdateAndConcatYamls.ALL_YAMLS_AS_ONE_FILE_NAME_GLOBAL)'
+      ArtifactName: '$(ReadyToUseYamlFileArtifactDirName)'
+    displayName: 'Publish Artifact: $(ReadyToUseYamlFileArtifactDirName)'
+    enabled: true
+
+  - bash: |
+      #(set -x
+
+      NUM_OF_FILES=0
+      CURRENT_TAG_NUMBER=1
+
+      echo "Copying the proxy script into the working folders ..."
+      
+      cp -v $(MainProxyScriptFileName) $(ExternalSourcesFolderName)
+      cp -v $(MainProxyScriptFileName) $(InternalSourcesFolderName)
+
+      cp -v undo-$(MainProxyScriptFileName) $(ExternalSourcesFolderName)
+      cp -v undo-$(MainProxyScriptFileName) $(InternalSourcesFolderName)
+
+      for dockerFileOrURL in ${{ variables.DockerFilesArray }}
+      do 
+          echo "Trying to use wget to download the file '$dockerFileOrURL' ..."
+
+          NAME_ONLY=$(basename $dockerFileOrURL)
+          
+          wget -e use_proxy=on -e https_proxy=$(VcloudProxyFullURL) -e check_certificate=off -e http_proxy=$(VcloudProxyFullURL) -L $dockerFileOrURL -O $NAME_ONLY
+
+          if [ "$?" -eq 0 ]; then
+              mv -v $NAME_ONLY $(ExternalSourcesFolderName)/Dockerfile
+              
+              echo "Trying to build the file '$(ExternalSourcesFolderName)/Dockerfile' taken from url '$dockerFileOrURL' ..."
+              
+              if [ -s "./$(ExternalSourcesFolderName)/Dockerfile" ]; then
+                  echo "Running the proxy updater script on the Dockerfile ..."
+
+                  bash ./$(DockerfilesProxyUpdaterScriptFileName) ./$(ExternalSourcesFolderName)/Dockerfile
+
+                  echo "======================================================================================"
+                  echo "Dockerfile content:"
+                  echo "======================================================================================"
+
+                  cat ./$(ExternalSourcesFolderName)/Dockerfile
+
+                  echo "Assigning a tag to the image which about to be built ..."
+
+                  CURRENT_TAG_NAME=$(echo $(UpdateAndConcatYamls.IMAGES_ARR_WITH_FULL_TAGS_GLOBAL) | cut -d " " -f $CURRENT_TAG_NUMBER)
+
+                  echo "Running 'docker build' on the Dockerfile ..."
+
+                  docker build -t $CURRENT_TAG_NAME ./$(ExternalSourcesFolderName)
+
+                  mv ./$(ExternalSourcesFolderName)/Dockerfile ./$(ExternalSourcesFolderName)/Dockerfile-$CURRENT_TAG_NUMBER.done
+
+                  let NUM_OF_FILES=NUM_OF_FILES+1
+                  let CURRENT_TAG_NUMBER=CURRENT_TAG_NUMBER+1
+              fi
+          else # maybe the docker file is local ...
+              if [ -s "$NAME_ONLY" ]; then
+                  mv -v $NAME_ONLY $(InternalSourcesFolderName)/Dockerfile
+
+                  echo "Running the proxy updater script on the Dockerfile ..."
+
+                  bash ./$(DockerfilesProxyUpdaterScriptFileName) ./$(InternalSourcesFolderName)/Dockerfile
+
+                  echo "======================================================================================"
+                  echo "Dockerfile content:"
+                  echo "======================================================================================"
+
+                  cat ./$(InternalSourcesFolderName)/Dockerfile
+
+                  echo "Assigning a tag to the image which about to be built ..."
+
+                  CURRENT_TAG_NAME=$(echo $(UpdateAndConcatYamls.IMAGES_ARR_WITH_FULL_TAGS_GLOBAL) | cut -d " " -f $CURRENT_TAG_NUMBER)
+
+                  echo "Running 'docker build' on the Dockerfile ..."
+
+                  docker build -t $CURRENT_TAG_NAME ./$(InternalSourcesFolderName)
+
+                  mv ./$(InternalSourcesFolderName)/Dockerfile ./$(InternalSourcesFolderName)/Dockerfile-$CURRENT_TAG_NUMBER.done
+
+                  let NUM_OF_FILES=NUM_OF_FILES+1
+                  let CURRENT_TAG_NUMBER=CURRENT_TAG_NUMBER+1
+              fi
+          fi
+
+          echo "A new docker image was added to the local repository:"
+
+          # the image name contains name and tag with colon between them. the default output of the docker images cmd seperates the two
+          # so the greping full image name using standard output will fail. we can reformat the default output to fix this problem
+          docker images --format "table {{.Repository}}:{{.Tag}}" | grep "$CURRENT_TAG_NAME"
+      done
+      
+      #)
+    displayName: 'get docker files and build images based on them'
+    enabled: true
+
+- job: ScanWithAqua
+  pool:
+    name: DockerPool
+  variables:
+    IMAGES_ARR_WITH_FULL_TAGS_GLOBAL: $[ dependencies.GetFilesAndBuildImages.outputs['UpdateAndConcatYamls.IMAGES_ARR_WITH_FULL_TAGS_GLOBAL'] ]
+    # needed for the next job
+    ALL_YAMLS_AS_ONE_FILE_NAME_GLOBAL: $[ dependencies.GetFilesAndBuildImages.outputs['UpdateAndConcatYamls.ALL_YAMLS_AS_ONE_FILE_NAME_GLOBAL'] ]
+  steps: 
+  - bash: |
+          STATUSES=''
+          CURRENT_REPORT_SERIAL_NUM=1
+
+          echo $(NexusPassword) | docker login $(NexusDockerRepoUrl) --password-stdin -u $(NexusUserName)
+
+          for i in $(IMAGES_ARR_WITH_FULL_TAGS_GLOBAL)
+          do
+              docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v /tmp:/tmp \
+              $(NexusDockerRepoUrl)/security/aqua/scanner:4.5 \
+              scan --user $(AquaApiUserName) --password $(AquaApiPassword) --host $(AquaServerUrl) --local $i \
+              --jsonfile /tmp/AquaSecurity-${CURRENT_REPORT_SERIAL_NUM}.json --html --htmlfile /tmp/AquaSecurity-${CURRENT_REPORT_SERIAL_NUM}.html --full-output --policies Allow-Root
+              
+              STATUSES="$STATUSES $?"
+
+              echo 
+              echo "Scan results for image '$i':"
+              echo "-----------------------------"
+              echo
+              
+              cat /tmp/AquaSecurity-${CURRENT_REPORT_SERIAL_NUM}.json
+              
+              echo
+
+              let CURRENT_REPORT_SERIAL_NUM=CURRENT_REPORT_SERIAL_NUM+1
+          done
+
+          for i in $STATUSES
+          do
+               if [ "$i" -ne 0 ]; then
+                  exit $i
+               fi
+          done
+
+          echo "##vso[task.setvariable variable=IMAGES_ARR_WITH_FULL_TAGS_GLOBAL;isOutput=true;]$IMAGES_ARR_WITH_FULL_TAGS_GLOBAL"
+          echo "##vso[task.setvariable variable=ALL_YAMLS_AS_ONE_FILE_NAME_GLOBAL;isOutput=true;]$ALL_YAMLS_AS_ONE_FILE_NAME_GLOBAL"
+
+    displayName: 'scan images with aqua'
+    name: ScanWithAQUA
+    enabled: true
+  dependsOn: GetFilesAndBuildImages
+
+  #failOnStderr: true
+    
+- job: UploadAssets
+  pool:
+      name: DockerPool
+  variables:
+    ALL_YAMLS_AS_ONE_FILE_NAME_GLOBAL: $[ dependencies.ScanWithAqua.outputs['ScanWithAQUA.ALL_YAMLS_AS_ONE_FILE_NAME_GLOBAL'] ]
+    IMAGES_ARR_WITH_FULL_TAGS_GLOBAL: $[ dependencies.ScanWithAqua.outputs['ScanWithAQUA.IMAGES_ARR_WITH_FULL_TAGS_GLOBAL'] ]
+  steps: 
+  - task: DownloadBuildArtifacts@0
+    inputs:
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: '$(ReadyToUseYamlFileArtifactDirName)'
+      downloadPath: '$(System.ArtifactsDirectory)'
+
+  - bash: |
+      cd $(System.ArtifactsDirectory)/$(ReadyToUseYamlFileArtifactDirName)
+
+      pwd
+
+      ls -la
+
+      YAML_PATH_IN_NEXUS=$(DeploymentCategory)/$(ProjectName)
+
+      YAML_FILENAME_TO_UPLOAD=$(ALL_YAMLS_AS_ONE_FILE_NAME_GLOBAL)
+      
+      if [ -s "$YAML_FILENAME_TO_UPLOAD" ]; then
+          echo "Preparing to encrypt the yaml file using PKI and Openssl ..."
+
+          echo "Generating a new certificate (public and private parts) ..."
+
+          RAND_FILENAME=rand-$(date +%s)
+
+          openssl rand -out /tmp/$RAND_FILENAME
+          openssl req -rand /tmp/$RAND_FILENAME -x509 -days $(PkiCertValidityInDays) -newkey rsa:8912 -keyout $(PkiCertPrivatePartFileName) -out $(PkiCertPublicPartFileName) -passout pass:$(PkiCertPassPhrase) -subj "$(PkiCertSubjectString)"
+
+          ls -l
+
+          rm /tmp/$RAND_FILENAME
+
+          if [ -s "$(PkiCertPublicPartFileName)" ]; then
+              echo "Encrypting the yaml file using the just generated public part of the certificate ..."
+              
+              openssl smime -encrypt -aes-256-cbc -in $YAML_FILENAME_TO_UPLOAD -out enc-$YAML_FILENAME_TO_UPLOAD -outform PEM $(PkiCertPublicPartFileName)
+
+              if [ -s "enc-$YAML_FILENAME_TO_UPLOAD" ]; then
+                  echo "Encrypting the yaml file succeeded. Removing the public part and uploading the encrypted version of the yaml along with the private part of the certificate ..."
+
+                  mv -v $YAML_FILENAME_TO_UPLOAD plain-$YAML_FILENAME_TO_UPLOAD
+                  rm -v $(PkiCertPublicPartFileName)
+                  
+                  mv -v $(PkiCertPrivatePartFileName) $(Build.BuildId)-$(ProjectName)-$(PkiCertPrivatePartFileName)
+
+                  curl -v --user '$(NexusUserName):$(NexusPassword)' --upload-file $(Build.BuildId)-$(ProjectName)-$(PkiCertPrivatePartFileName) $(NexusRawRepoUrl)/$YAML_PATH_IN_NEXUS/$(Build.BuildId)-$(ProjectName)-$(PkiCertPrivatePartFileName)
+
+                  # if the upload fails, we can't use the encrypted yaml so we roll back to the un-encrypted version
+                  if ! [ "$?" -eq 0 ]; then
+                      echo "WARNING: Something went wrong while trying to upload the private key. Rolling back action ..."
+                      
+                      # prepare the plain version for uploading instead of the encrypted version
+                      mv -v plain-$YAML_FILENAME_TO_UPLOAD $YAML_FILENAME_TO_UPLOAD
+
+                      # housekeeping ...
+                      rm -v $(Build.BuildId)-$(ProjectName)-$(PkiCertPrivatePartFileName)
+                  else
+                      # prepare the encrypted version for uploading
+                      mv -v enc-$YAML_FILENAME_TO_UPLOAD $YAML_FILENAME_TO_UPLOAD
+                  fi
+              fi
+          else
+              echo "WARNING: Something went wrong while trying to create a new certificate. Will NOT encrypt the yaml file."
+          fi
+
+          UPLOADED_FILE_NAME=$(Build.BuildId)-$(ProjectName)-$(ALL_YAMLS_AS_ONE_FILE_NAME_GLOBAL)
+
+          echo "Trying to use curl to upload the yaml file '$YAML_FILENAME_TO_UPLOAD' as "
+          echo "'$(NexusRawRepoUrl)/$YAML_PATH_IN_NEXUS/$UPLOADED_FILE_NAME' ..."
+
+          curl --user '$(NexusUserName):$(NexusPassword)' --upload-file $YAML_FILENAME_TO_UPLOAD $(NexusRawRepoUrl)/$YAML_PATH_IN_NEXUS/$UPLOADED_FILE_NAME
+      else
+          echo "WARNING: file '$YAML_FILENAME_TO_UPLOAD' wasn't found!"
+      fi
+
+      echo "Running docker login with the repo creds ..."
+
+      echo $(NexusPassword) | docker login $(NexusDockerRepoUrl) --password-stdin -u $(NexusUserName)
+      
+      echo "Trying to upload the images to nexus ..."
+      
+      echo "DEBUG: images array content: $(IMAGES_ARR_WITH_FULL_TAGS_GLOBAL)"
+
+      for i in $(IMAGES_ARR_WITH_FULL_TAGS_GLOBAL)
+      do
+          # the image name contains name and tag with colon between them. the default output of the docker images cmd seperates the two
+          # so the greping full image name using standard output will fail. we can reformat the default output to fix this problem
+           docker images --format "table {{.Repository}}:{{.Tag}}" | grep "$i" &>/dev/null
+
+          if [ "$?" -eq 0 ]; then
+              echo "Pushing a new image named '$i' to Nexus ..."
+
+              #docker push $i
+          else
+              echo "WARNING: image '$i' was not found in local repository!"
+          fi
+      done
+    
+    displayName: 'push assets to the repo'
+    enabled: true
+  dependsOn: ScanWithAqua
+  condition: succeeded()
