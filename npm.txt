@@ -1,0 +1,91 @@
+NodeJS - A javascript based SDK and runtime
+
+NODE - NodeJS runtime binary / JS parser.
+
+NPM - NODE's package manager.
+
+
+=================
+BASICS
+=================
+
+1. Install node.js.
+
+2. Add npm binary to the PATH environment variable (if not already there).
+
+3. Create a directory for the project.
+
+4. Run 'npm init' to create a new "package.json" empty file.
+	-> answer the questions when asked and approve all details and the end.
+
+5. Run npm install to install the required modules for your project.
+	-> e.g. npm install express helmet body-parser
+
+6. Create you own code ...
+
+7. Run your code using the command 'node <your-file>'.
+
+8. Use the free IDE "Visual Code" from MS when programming for Node.js because it has a built-in support for it.
+
+
+==================
+USEFUL COMMANDS
+==================
+
+npm init --yes - create a new "package.json" file inside an empty dir to start a new npm project
+
+
+npm show jquery@*  version - show all of the specific versions of a given package ("version" is an ARGUMENT)
+
+
+npm ls - shows a full list of packages and version used by the project
+
+
+npm run <js-file> - run a JS program
+
+
+npm run build --prod - create a bundles set of JS files for a production environment
+
+
+npm view bootstrap dist.tarball - get a full download url of the package:
+https://registry.npmjs.org/bootstrap/-/bootstrap-4.3.1.tgz
+
+
+npm config ls -l - list all npm settings
+
+
+npm set registry http://my.registry.local/repository/npm.org-proxy - setup a different registry to work with
+
+npm set registry https://my.registry.local:8443/repository/global--dev--npm--group/
+
+
+default registry:
+npm set registry https://registry.npmjs.org/
+
+
+npm set proxy http://192.168.1.1:3128/
+npm set https-proxy http://192.168.1.1:3128/
+
+
+
+npm login - login to a registry that requires credentials
+
+
+npm install jquery@2.1.1 - install a specific package version
+
+
+npm cache clean --force - clear all cache
+
+DEBUG:
+
+add the "--verb" switch to add debugging info to the output of the command:
+
+npm --verb install jquery
+
+
+get only the description of a package:
+
+npm view jquery description
+
+
+
