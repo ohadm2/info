@@ -1,0 +1,5 @@
+get the source repo of a given pkg
+-----------------------------------------
+
+apt policy <pkg_name>
+
