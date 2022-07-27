@@ -3,3 +3,16 @@ get the source repo of a given pkg
 
 apt policy <pkg_name>
 
+
+ignore problems with gpg keys:
+------------------------------------------
+via conf:
+
+Acquire::AllowInsecureRepositories "true";
+Acquire::AllowDowngradeToInsecureRepositories "true";
+
+via cmd:
+
+sudo apt -o Acquire::AllowInsecureRepositories=true \
+-o Acquire::AllowDowngradeToInsecureRepositories=true \
+update
