@@ -147,7 +147,7 @@ docker:
 
 	-> setup proxy via:
   
-		-> Redhat / Centos:
+		-> Redhat / Centos (upstart/sysVinit, NOT systemd):
 
 		/etc/default/docker:
 
@@ -160,7 +160,7 @@ docker:
 				
 				/etc/init.d/docker restart	
 		
-		-> Ubuntu:
+		-> Ubuntu (systemd):
 
 			1. Create a new directory for our Docker service configurations.
 				
