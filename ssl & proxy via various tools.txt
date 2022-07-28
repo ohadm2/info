@@ -168,7 +168,7 @@ docker:
 			
 			2. Create a file called proxy.conf in our configuration directory.
 			
-				sudo vi /etc/systemd/system/docker.service.d/proxy.conf
+				sudo vim /etc/systemd/system/docker.service.d/proxy.conf
 			
 			3. Add the following contents, changing the values to match your environment.
 			
