@@ -147,7 +147,7 @@ docker:
 
 	-> setup proxy via:
   
-		-> Redhat / Centos (upstart/sysVinit, NOT systemd):
+		-> Redhat / Centos:
 
 		/etc/default/docker:
 
@@ -160,7 +160,7 @@ docker:
 				
 				/etc/init.d/docker restart	
 		
-		-> Ubuntu (systemd):
+		-> Ubuntu:
 
 			1. Create a new directory for our Docker service configurations.
 				
@@ -187,6 +187,20 @@ docker:
 			
 				sudo systemctl restart docker.service
 		
+			#### All in one:
+			
+			sudo mkdir -p /etc/systemd/system/docker.service.d
+			
+			cat <<EOF > /etc/systemd/system/docker.service.d/proxy.conf
+			[Service]
+				Environment="HTTP_PROXY=http://192.168.123.45:8080"
+				Environment="HTTPS_PROXY=http://192.168.123.45:8080"
+				Environment="NO_PROXY="localhost,127.0.0.1,::1"
+			EOF
+			
+			sudo systemctl daemon-reload
+			sudo systemctl restart docker.service
+			
 		
 	-> ca certs location:
   
@@ -281,12 +295,22 @@ apt (Ubuntu only):
 
 	-> setup proxy via:
 
-		-> apt configuration file /etc/apt/apt.conf (or similar)
+		->	A. Method 1:
+		
+			-> in apt configuration file /etc/apt/apt.conf (or create a new settings file in /etc/apt/conf.d/ e.g. /etc/apt/conf.d/50-proxy.conf)
 
-			-> add the lines:
-
-            Acquire::http::proxy "http://192.168.123.45:8080/";
-            Acquire::https::proxy "http://192.168.123.45:8080/";
+					-> add the lines:
+						
+						Acquire::http::proxy "http://192.168.123.45:8080/";
+						Acquire::https::proxy "http://192.168.123.45:8080/";
+			
+		-> A. Method 2:
+				
+			-> Define SMALL LETTERS proxy env vars (they MUST be SMALL for apt to recognize them!!!!):
+			
+					export http_proxy=http://192.168.123.45:8080
+					export https_proxy=http://192.168.123.45:8080
+					export no_proxy="localhost, 127.0.0.1, 192.168.0.1, 10.0.0.3, 172.16.1.1"   
 
 	-> ca certs location:
 		
