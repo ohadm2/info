@@ -8,7 +8,7 @@ version.
     
     Preface:
             1. Linker - It is not enough to simply set a different libs location using one of the LD_ env vars (LD_LIBRARY_PATH) because these vars are called by the kernel 
-            via its dynamic linker/loader (ld-linux e.g. ld-linux-x86-64.so.2) which is also connected to a specific glibc version. This means that one must use the
+            via its dynamic linker/loader/interpreter (ld-linux e.g. ld-linux-x86-64.so.2) which is also connected to a specific glibc version. This means that one must use the
             complient linker as well.
             2. Mismatch between glibc and the linker will cause a 'segmentation error'.
 
