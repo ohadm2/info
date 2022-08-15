@@ -4,7 +4,12 @@ How to Run a program using a different GLIBC version
 1. Changing the system level glibc library and depends may be complex and may break the system so in cases when it is needed to run a different version it is not
 advisable to upgrade only this lib but upgrade the entire OS.
 2. In cases when the dual configuration is needed (2 versions or more of the glibc lib on the same host), there are two possible ways to run the app using the other
-version:
+version.
+    
+    Preface:
+    
+
+    These ways are:
 
     2.1. Using Docker (easiest and cleanest) - simply run a newer version of your OS which probably runs a newer glibc version and run the app from inside the docker
     image.
