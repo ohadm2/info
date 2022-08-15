@@ -7,11 +7,14 @@ advisable to upgrade only this lib but upgrade the entire OS.
 version.
     
     Preface:
-    
+            1. Linker - It is not enough to simply set a different libs location using one of the LD_ env vars (LD_LIBRARY_PATH) because these vars are called by the kernel 
+            via its dynamic linker/loader (ld-linux e.g. ld-linux-x86-64.so.2) which is also connected to a specific glibc version. This means that one must use the
+            complient linker as well.
+            2. Mismatch between glibc and the linker will cause a 'segmentation error'.
 
     These ways are:
 
     2.1. Using Docker (easiest and cleanest) - simply run a newer version of your OS which probably runs a newer glibc version and run the app from inside the docker
     image.
-    2.2. By Copying a new glibc "package" (i.e. the libc.so.8 file and other .so depends) and running the app using the newer INTERPRETER DIRECTLY with an 
+    2.2. By Copying a new glibc "package" (i.e. the libc.so.8 file and other .so depends) and running the app using the newer linker (see above) DIRECTLY with an 
     LD_LIBRARY_PATH env var - e.g. LD_LIBRARY_PATH=/path/to/new-glibc-dir /path/to/ld-linux-x86-64.so.2 app_to_run
