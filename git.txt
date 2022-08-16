@@ -1,0 +1,59 @@
+
+create a new branch:
+----------------------
+
+git push origin HEAD:private/omalichi/omalichi-general
+
+
+list all remote branches
+----------------------------
+
+git branch -r
+
+
+select that branch
+----------------------
+
+git checkout private/omalichi/omalichi-general
+
+
+get current selected (active) branch [local]
+---------------------------------------------
+
+git branch
+
+
+check files status
+----------------------
+
+git status
+
+
+
+add all files to local git repo
+-----------------------------------
+
+git add .
+
+
+commit files to the local git
+-----------------------------------
+
+git commit -m "what was made"
+
+
+push the changes to the remote git
+-----------------------------------
+
+git push
+
+
+
+
+align a branch with the master branch (take all changes from master to the other branch)
+-------------------------------------------------------------------------------------------
+
+git checkout master
+git pull
+git checkout private/omalichi/omalichi-general
+git merge master
