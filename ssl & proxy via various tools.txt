@@ -112,7 +112,6 @@ OS LEVEL:
 				B. Method 2 (good for automation):
 					
 					i. run the command 'sudo update-ca-certificates --default'.
-					ii. run the command 'sudo apt install -y ca-certificates'.
 
 				C. Method 3 (different folder):
 					i. copy the certificates to the folder: /usr/local/share/ca-certificates/
