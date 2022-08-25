@@ -1,3 +1,6 @@
+Get-WindowsCapability -Online | ? Name -like '*ssh*'
+
+Get-WindowsOptionalFeature -Online | ? featurename -like "*iis*"
 
 
  get-command | where-object { $_.Name -match "regEx_Pattern" }
