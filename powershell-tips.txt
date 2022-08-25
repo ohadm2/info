@@ -1,0 +1,50 @@
+
+
+ get-command | where-object { $_.Name -match "regEx_Pattern" }
+ get-command | where-object { $_.Name -like "*hasThisLineInside*" }
+ 
+
+
+ gc aTextFile | get-string "hasThisLine"
+ 
+ 
+ Get-Service | Sort-Object -Property "status" | more
+
+
+[System.Convert]::toString(765213,2)
+
+
+[char](94)
+
+
+foreach ($line in [System.IO.File]::ReadLines("c:\temp\minhala-clients.txt")) {echo $line}
+
+
+Get-Variable | Format-Table name, value -auto
+
+
+Variable Name Description
+$_ The current pipeline object; used in script blocks, filters, the process clause of functions, where-object, foreach-object and switch
+$^ contains the first token of the last line input into the shell
+$$ contains the last token of last line input into the shell
+$? Contains the success/fail status of the last statement
+$Args Used in creating functions that require parameters
+$Env:Path Environmental Path to files.
+$Error If an error occurred, the object is saved in the $error PowerShell variable
+$foreach Refers to the enumerator in a foreach loop.
+$HOME The user's home directory; set to %HOMEDRIVE%\%HOMEPATH%
+$Input Input piped to a function or code block
+$Match A hashtable consisting of items found by the -Match operator.
+$MyInvocation Information about the currently script or command-line
+$Host Information about the currently executing host
+$LastExitCode The exit code of the last native application to run
+$PSVersionTable Chech the version of PowerShell
+$true Boolean TRUE
+$false Boolean FALSE
+$null A null object
+$PsUnsupported
+ConsoleApplications List unsupported commands
+$OFS Output Field Separator, used when converting an array to a string.
+By default, this is set to the space character.
+$ShellID The identifier for the shell.  This value is used by the shell to determine the ExecutionPolicy and what profiles are run at startup.
+$StackTrace contains detailed stack trace information about the last error
