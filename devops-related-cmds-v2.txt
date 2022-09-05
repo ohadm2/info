@@ -7,6 +7,9 @@ kubectl port-forward service/myservice 8443:https
 # Listen on port 8888 locally, forwarding to 5000 in the pod
 kubectl port-forward pod/mypod 8888:5000
 
+kubectl apply -f https://k8s.io/examples/application/deployment.yaml
+
+
 
 kubectl apply -f daemonset.yaml -n my-namespace
 
