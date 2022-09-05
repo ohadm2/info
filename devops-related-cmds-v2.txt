@@ -149,8 +149,6 @@ k create clusterrolebinding my-namespace --clusterrole=my-namespace --serviceacc
 
 k get events
 
-tkgi clusters
-
 k rollout restart daemonset my-namespace
 
 
