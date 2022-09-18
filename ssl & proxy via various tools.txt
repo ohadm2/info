@@ -358,9 +358,17 @@ python / pip:
 
 		windows / linux:
 
-			"http_proxy" & "https_proxy" environment variables
+			"http_proxy" & "https_proxy" environment variables (small letters)
 
 			e.g. https_proxy="http://192.168.123.45:8080" (the url itself is HTTP! not https.)
+			
+			You MUST use a schema! (e.g. add 'http://' before the proxy address) otherwise a schema related error will occur on pip!
+			
+			E.g: 
+			
+			WARNING: Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ProxyError('Your proxy appears to only use HTTP and not HTTPS, try changing your proxy URL to be HTTP. See: https://urllib3.readthedocs.io/en/1.26.x/advanced-usage.html#https-proxy-error-http-proxy', SSLError(SSLError(1, '[SSL: WRONG_VERSION_NUMBER] wrong version number (_ssl.c:997)')))': /simple/lz4/
+			
+			
 
 
 	-> ca certs location: 
