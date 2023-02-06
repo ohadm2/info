@@ -1,8 +1,44 @@
+General operation:
+-------------------------
 
-create a new branch:
+* align with remote master
+* delete all other branches
+* make changes
+* push to a new branch
+* use the UI to create a PR
+
+
+align with remote master
+-------------------------
+
+git checkout origin/master
+git fetch --all
+git checkout master
+git stash
+git pull --rebase
+git stash pop
+
+
+align with master, reset local master repo and remove all other branches
+-------------------------------------------------------------------------
+
+git checkout master
+
+git reset --hard
+
+git branch | grep -v "master" | xargs git branch -D
+
+
+delete all local branches but master
+-----------------------------------------------------
+
+git branch | grep -v "master" | xargs git branch -D
+
+
+create a new branch
 ----------------------
 
-git push origin HEAD:private/omalichi/omalichi-general
+git push origin HEAD:private/malichi/malichi-general
 
 
 list all remote branches
@@ -11,16 +47,35 @@ list all remote branches
 git branch -r
 
 
-select that branch
+select a branch
 ----------------------
 
-git checkout private/omalichi/omalichi-general
+git checkout private/malichi/malichi-general
 
 
 get current selected (active) branch [local]
 ---------------------------------------------
 
 git branch
+
+
+get all branches
+---------------------------------------------
+
+git branch --all
+
+
+switch to a different branch
+---------------------------------------------
+
+git branch <branch-name>
+git checkout <branch-name>
+
+
+delete a branch
+---------------------------------------------
+
+git branch --delete private/malichi/malichi-general
 
 
 check files status
@@ -48,12 +103,94 @@ push the changes to the remote git
 git push
 
 
-
-
-align a branch with the master branch (take all changes from master to the other branch)
--------------------------------------------------------------------------------------------
+align a branch with the master branch (take all changes from master to the other branch - the LOCAL branch will be updated)
+------------------------------------------------------------------------------------------------------------------------------
 
 git checkout master
 git pull
-git checkout private/omalichi/omalichi-general
+git checkout private/malichi/malichi-general
 git merge master
+
+# then update your remote branch:
+git push
+
+
+a much simpler way:
+----------------------
+
+simply run: git fetch
+
+
+
+
+.gitignore handling
+------------------------
+
+echo .gitignore >> .gitignore
+echo /path/to/file >> .gitignore
+echo /path/to/folder >> .gitignore
+
+git rm --cached .gitignore
+
+git commit -m "untracked .gitignore"
+
+
+
+"both added" / "both modified" conflict
+-----------------------------------------
+
+git rm <conflicting file/s>
+
+git commit -m "removed conflict"
+
+git push
+
+
+"deleted by us" conflict
+--------------------------------
+
+git add <conflicting file/s>
+
+git commit -m "re-added conflicting files"
+
+git push
+
+
+remove the last commit
+---------------------------------
+
+git reset --soft HEAD~
+
+
+
+You have divergent branches and need to specify how to reconcile them
+-------------------------------------------------------------------------
+
+git pull --rebase
+
+git checkout private/malichi/malichi-general
+
+
+
+revert from overriding files due to a git pull made by mistake
+----------------------------------------------------------------
+
+git checkout <overriding-branch>
+
+git restore <overrided-files>
+
+
+
+error: failed to push some refs to <branch>
+---------------------------------------------
+
+git checkout private/malichi/malichi-general
+
+git pull --rebase
+
+git push --set-upstream origin private/malichi/malichi-general
+
+
+
+
+
