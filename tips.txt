@@ -120,6 +120,17 @@ docker run -it -v c:/Temp:c:/inner-dir 0ab7944768e3 cmd
 r --user malichi -it -v /tmp/krb5cc_malichi:/tmp/krb5cc_malichi ubuntu
 
 
+* Connect the UI to a docker image:
+
+cp ~/.Xauthority /tmp
+chmod 777 /tmp/.Xauthority
+docker container run -d -it --memory=8g --rm --env HOME=/tmp -e DISPLAY="$DISPLAY" --privileged --network=host -v /tmp:/tmp \
+
+
+* Connect the UI to an SSH session:
+
+ssh -X <target-machine> -t /usr/bin/env DISPLAY=$DISPLAY PATH="$PATH":/usr/bin:/bin /bin/bash
+
 
 
 
