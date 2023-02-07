@@ -192,5 +192,13 @@ git push --set-upstream origin private/malichi/malichi-general
 
 
 
+override a single file from original repo
+----------------------------------------------
+
+git checkout FROM_BRANCH_NAME path/to/file
+
+e.g. git checkout origin /info/general.txt
+
+
 
 
