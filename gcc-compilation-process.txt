@@ -1,0 +1,15 @@
+# more info: https://gibsonic.org/tools/2019/08/08/gcc_building.html
+
+export HTTPS_PROXY=
+export HTTP_PROXY=
+
+export https_proxy=
+export http_proxy=
+
+apt update && apt install gcc g++ git curl build-essential m4 automake make autoconf2.69 libtool flex bison gzip bzip2 binutils tar perl linux-headers-5.4.0-96-generic libgmp-dev libmpfr-dev libmpc-dev libisl-dev libz-dev libzstd-dev zstd diffutils texinfo libzip-dev gcc-multilib ccache libnewlib-dev libelf-dev -y
+
+git clone --branch releases/gcc-8.3.0 https://github.com/gcc-mirror/gcc.git
+
+/root/gcc/configure --enable-languages=c,c++ --disable-werror --with-newlib --disable-__cxa_atexit --enable-lto --enable-gold --with-gnu-as --with-gnu-ld --disable-shared --disable-libssp --with-libelf
+
+make bootstrap-lean -j20
