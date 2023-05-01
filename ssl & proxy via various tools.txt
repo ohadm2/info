@@ -437,6 +437,11 @@ php:
 
 					pfpro.proxyaddress = "http://192.168.123.45"
 					pfpro.proxyport = "8080"
+				
+				-> [curl] / [openssl] sections:
+					
+					curl.cainfo="a\path\to\a\ca\bundle\file"
+					openssl.cafile="a\path\to\a\ca\bundle\file"
 
 			-> via the code:
 
