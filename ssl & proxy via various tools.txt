@@ -305,7 +305,8 @@ apt (Ubuntu only):
 			
 		-> A. Method 2:
 				
-			-> Define SMALL LETTERS proxy env vars (they MUST be SMALL for apt to recognize them!!!!):
+			-> Define SMALL LETTERS proxy env vars (they MUST be SMALL for apt to recognize them!!!!)
+			-> The vars MUST BE with a FULL SCHEMA structure e.g. http://<address>:<port> and not just <address>:<port>!
 			
 					export http_proxy=http://192.168.123.45:8080
 					export https_proxy=http://192.168.123.45:8080
