@@ -124,7 +124,7 @@ r --user malichi -it -v /tmp/krb5cc_malichi:/tmp/krb5cc_malichi ubuntu
 
 cp ~/.Xauthority /tmp
 chmod 777 /tmp/.Xauthority
-docker container run -d -it --memory=8g --rm --env HOME=/tmp -e DISPLAY="$DISPLAY" --privileged --network=host -v /tmp:/tmp \
+docker container run -d -it --memory=2g --rm --env HOME=/tmp -e DISPLAY="$DISPLAY" --privileged --network=host -v /tmp:/tmp <img-to-run>
 
 
 * Connect the UI to an SSH session:
