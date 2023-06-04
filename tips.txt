@@ -122,7 +122,7 @@ r --user malichi -it -v /tmp/krb5cc_malichi:/tmp/krb5cc_malichi ubuntu
 
 * Connect the UI to a docker image:
 
-cp ~/.Xauthority /tmp
+cp ~/.Xauthority /tmp OR cp /run/user/1000/gdm/Xauthority /tmp/.Xauthority
 chmod 777 /tmp/.Xauthority
 docker container run -d -it --memory=2g --rm --env HOME=/tmp -e DISPLAY="$DISPLAY" --privileged --network=host -v /tmp:/tmp <img-to-run>
 
