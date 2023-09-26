@@ -6,7 +6,7 @@
 
 2) To get the proxy certificates from a station without UI run the command:
 
- openssl s_client -connect google.com:443 -showcerts -proxy 192.168.176.80:8080 > /tmp/certs.txt
+ openssl s_client -connect google.com:443 -showcerts -proxy 192.168.123.45:8080 > /tmp/certs.txt
  
  Then open the file, remove any non-certificate-related lines and the end certificate which is not needed and then you could simply concatenate the certs to the relevant ca-bundle file.
 
@@ -255,7 +255,7 @@ yum:
 			
 			add a new line:
 
-				proxy=http://192.168.176.80:8080
+				proxy=http://192.168.123.45:8080
 
 	-> skip ssl certs verification:
 		
@@ -493,7 +493,7 @@ git:
 
 			-> under the [http] segment (create a new one if it does not exist)
 
-				proxy=http://192.168.176.80:8080
+				proxy=http://192.168.123.45:8080
 
 
 	-> ca certs location:
@@ -611,8 +611,8 @@ npm:
 
 		-> npm commands:
 
-			npm config set proxy http://192.168.176.80:8080/
-			npm config set https-proxy http://192.168.176.80:8080/
+			npm config set proxy http://192.168.123.45:8080/
+			npm config set https-proxy http://192.123.45.80:8080/
 
 
 	-> skip ssl certs verification:
