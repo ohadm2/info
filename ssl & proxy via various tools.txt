@@ -550,6 +550,12 @@ ruby / gem:
 					-> Append the the needed certs to /etc/ssl/certs/ca-certificates.crt
 
 
+		-> Debugging:
+		
+			-> Get the location of the certs file ruby uses:
+				 -> cmd: ruby -ropenssl -e 'p OpenSSL::X509::DEFAULT_CERT_FILE'
+			-> SSL check script:
+				-> https://raw.githubusercontent.com/rubygems/ruby-ssl-check/master/check.rb
 wget:
 
 	-> setup proxy via:
