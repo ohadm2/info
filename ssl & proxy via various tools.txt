@@ -122,7 +122,9 @@ OS LEVEL:
 			4. You might want to add the cert to the OS ca bundle file as well:
 			
 				cat my-root-cert.crt >> /etc/ssl/certs/ca-certificates.crt
-				
+   -> extra notes:
+	-> when in docker, you might need to install certs first e.g. apt update && apt install ca-certificates -y
+	
 
 -> Redhat / Centos:
 
@@ -411,10 +413,40 @@ python / pip:
 		
 		* the command "pip debug" will print to screen the location of the ca bundle being used by it (NOTE: some old versions of pip do not have that command).
 
-    * one can set the environment variable 'REQUESTS_CA_BUNDLE' for a different ca-bundle location for the 'requests' python module.
-        -> e.g. export REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+                 * one can set the environment variable 'REQUESTS_CA_BUNDLE' for a different ca-bundle location for the 'requests' python module.
+                        -> e.g. export REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+		 * one can set a general ssl bundle location using the env var 'SSL_CERT_FILE'.
+			-> e.g. export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt.
 
-	-> skip ssl certs verification:
+		* testing code:
+
+			import ssl
+			import certifi
+			from urllib.request import urlopen
+			
+			# Get the default certificate file path used by the ssl module
+			default_cert_file = ssl.get_default_verify_paths().cafile
+			print("Default SSL certificate file:", default_cert_file)
+			
+			# Get the certificate file path provided by certifi
+			certifi_cert_file = certifi.where()
+			print("Certifi certificate file:", certifi_cert_file)
+			
+			# Check if the default certificate file is the same as the one provided by certifi
+			if default_cert_file == certifi_cert_file:
+			    print("Python is using certifi for SSL certificate verification.")
+			else:
+			    print("Python is NOT using certifi for SSL certificate verification.")
+			
+			# Example usage of urlopen
+			try:
+			    response = urlopen("https://www.google.com")
+			    print("Request successful:", response.status)
+			except Exception as e:
+			    print("Request failed:", e)
+
+
+     -> skip ssl certs verification:
   
 		-> pip configuration file /etc/pip.conf (or similar)
 
