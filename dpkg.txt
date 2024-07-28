@@ -19,6 +19,9 @@ dpkg-query -L <pkg_name>
 
 dpkg --search filename
 
+- or -
+
+dpkg-query -S filename
 
 # List all packages
 
