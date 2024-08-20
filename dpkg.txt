@@ -15,7 +15,7 @@ dpkg-reconfigure <pkg_name>
 dpkg-query -L <pkg_name>
 
 
-# Find package that installed a file (search only in currently installed pkgs)
+# Find what package does a given file belongs to
 
 dpkg --search filename
 
