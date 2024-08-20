@@ -1,0 +1,1 @@
+openssl pkeyutl -sign -keyform ENGINE -engine pkcs11 -inkey "$(p11tool --list-token-urls --provider=--provider=/lib64/libASEP11.so)" -in tester.txt -out tester-signed.dat
