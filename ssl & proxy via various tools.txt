@@ -673,7 +673,21 @@ node server (node binary file):
     
   -> ca certs location:
     
-      -> set a new env variable named 'NODE_EXTRA_CA_CERTS' and give it a full path to a ca-bundle file. (not verified)
+      -> set a new env variable named 'NODE_EXTRA_CA_CERTS' and give it a full path to a ca-bundle file.
+		-> UBUNTU:
+			-> export NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
+
+
+  -> NOTE: keep in mind that some extensions in MS TFS (A.K.A Azure Devops Server and VS CODE IDE use node for installing so this will be relevant there as well)
+
+VS CODE:
+     -> ca certs location:
+    
+      -> set a new env variable named 'NODE_EXTRA_CA_CERTS' and give it a full path to a ca-bundle file.
+		-> UBUNTU:
+			-> export NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
+
+     -> NOTE: setting NODE_TLS_REJECT_UNAUTHORIZED does not seem to work for CODE.
 
 
 snyk(via node.exe):
