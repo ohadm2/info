@@ -72,6 +72,9 @@ section 3 above will not cause any problems because of a schema inclusion so in 
 
   E.g.: for 'kubectl', even though it works only in HTTPS, the HTTP_PROXY variable MUST ALSO BE REMOVED and it is NOT enough just to remove the HTTPS_PROXY parameter alone.
 
+12) Make sure to use base 64 format certs on Linux systems / Linux tools!
+
+  Convert if needed: openssl x509 -inform der -in certificate.der -out certificate.pem
 
 
 ######################
@@ -918,4 +921,16 @@ splunk:
     
         -> embed the certificates at OS level
         
-        SEE MORE INFO ABOVE        
+        SEE MORE INFO ABOVE
+
+
+helm:
+
+  -> ca certs location: 
+    
+        -> embed the certificates at OS level
+
+		-> e.g.: cat pem certs to /etc/ssl/certs/ca-certificates.crt in Ubuntu (TESTED)
+        
+        SEE MORE INFO ABOVE
+
