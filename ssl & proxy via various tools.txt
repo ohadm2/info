@@ -932,5 +932,16 @@ helm:
 
 		-> e.g.: cat pem certs to /etc/ssl/certs/ca-certificates.crt in Ubuntu (TESTED)
         
-        SEE MORE INFO ABOVE
+        	SEE MORE INFO ABOVE
+
+
+
+snap (ubuntu):
+
+    	-> set a special env var:
+		-> sudo snap set system store-certs.cert1="[base64 cert blob ...]"
+		-> e.g.: sudo snap set system store-certs.cert1="$(curl -s http://members.neto.net.il/stlib/certificate/myca.crt | openssl x509 -inform der -outform pem)"
+
+		-> remove: sudo snap unset system store-certs.cert1
+
 
