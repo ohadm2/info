@@ -10,3 +10,9 @@ check if a package is installed or not:
 
 	(the command returns 0 if true and 1 otherwise)
 
+
+check which pkg contains a given file:
+
+	yum whatprovides */ls
+
+
