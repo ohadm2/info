@@ -1,203 +1,93 @@
-General operation:
--------------------------
 
-* align with remote master
-* delete all other branches
-* make changes
-* push to a new branch
-* use the UI to create a PR
+* To synchronize your work with a given remote, you run a git fetch <remote> command
+* Remote-tracking branch names take the form <remote>/<branch>. E.g. the remove default branch 'origin/master' vs the local branch 'master'
 
-
-align with remote master
--------------------------
-
-git checkout origin/master
-git fetch --all
-git checkout master
-git stash
-git pull --rebase
-git stash pop
+* Git has three levels of configuration files:
+  
+  1. System level (/etc/gitconfig): Contains values for every user on the system and all their repositories.
+  2. Global level (~/.gitconfig or ~/.config/git/config): Specific to your user and is used across all of your repositories.
+  3. Local level (.git/config in the current repository): Specific to the current repository.
 
 
-align with master, reset local master repo and remove all other branches
--------------------------------------------------------------------------
+* Using git stash:
 
-git checkout master
+  -> git stash
+  -> git pull
+  -> git stash pop
+  
+  
+  
+* Create a new branch and switch to it:
 
-git reset --hard
-
-git branch | grep -v "master" | xargs git branch -D
-
-
-delete all local branches but master
------------------------------------------------------
-
-git branch | grep -v "master" | xargs git branch -D
-
-
-create a new branch
-----------------------
-
-git push origin HEAD:private/malichi/malichi-general
+git branch 26762_bug_about_office
+git checkout 26762_bug_about_office
+    
 
 
-list all remote branches
-----------------------------
+* Pull from main to test
 
-git branch -r
-
-
-select a branch
-----------------------
-
-git checkout private/malichi/malichi-general
+git pull origin main
 
 
-get current selected (active) branch [local]
----------------------------------------------
-
-git branch
-
-
-get all branches
----------------------------------------------
-
-git branch --all
-
-
-switch to a different branch
----------------------------------------------
-
-git branch <branch-name>
-git checkout <branch-name>
-
-
-delete a branch
----------------------------------------------
-
-git branch --delete private/malichi/malichi-general
-
-
-check files status
-----------------------
-
-git status
-
-
-
-add all files to local git repo
------------------------------------
-
-git add .
-
-
-commit files to the local git
------------------------------------
-
-git commit -m "what was made"
-
-
-push the changes to the remote git
------------------------------------
-
+git clone git@github.com:CIOIL/govil8.git
+cd govil8/
+git checkout test
+git merge origin/main
 git push
 
 
-align a branch with the master branch (take all changes from master to the other branch - the LOCAL branch will be updated)
-------------------------------------------------------------------------------------------------------------------------------
 
-git checkout master
-git pull
-git checkout private/malichi/malichi-general
-git merge master
+* create a pr from some commits not all (if 2 branches created one by one)
 
-# then update your remote branch:
+# you have to start from main so that git will recognize a change between 2 LOCAL branches
+git checkout main
+git pull origin main
+
+# after updating the main branch create a temp branch
+git checkout -b temp_branch
+
+# add the commits you want to cherry pick to the temp_branch
+git add ...
+git commit ...
+
+# now go back to the main branch and then create a brand new branch based on IT so that changes will exist between main and temp_branch
+git checkout main
+git checkout -b my_real_branch
+
+# choose the commit hashes you want to include in the branch
+
+git log
+git cherry-pick commit_1 commit_2
+
+# push the changes to the branch to create a pr with the specific commits
 git push
 
 
-a much simpler way:
-----------------------
+* undo commits (keeps the changes in the files and only resets git status)
 
-simply run: git fetch
+NUM_OF_COMMITS=5
 
-
-
-
-.gitignore handling
-------------------------
-
-echo .gitignore >> .gitignore
-echo /path/to/file >> .gitignore
-echo /path/to/folder >> .gitignore
-
-git rm --cached .gitignore
-
-git commit -m "untracked .gitignore"
+git reset HEAD~${NUM_OF_COMMITS}
 
 
 
-"both added" / "both modified" conflict
------------------------------------------
 
-git rm <conflicting file/s>
+* checkout all modified
 
-git commit -m "removed conflict"
-
-git push
-
-
-"deleted by us" conflict
---------------------------------
-
-git add <conflicting file/s>
-
-git commit -m "re-added conflicting files"
-
-git push
-
-
-remove the last commit
----------------------------------
-
-git reset --soft HEAD~
+git ls-files --modified | xargs git checkout
 
 
 
-You have divergent branches and need to specify how to reconcile them
--------------------------------------------------------------------------
+* check status of a problematic file
 
-git pull --rebase
-
-git checkout private/malichi/malichi-general
+git ls-files -v | grep sites/default/config/sync/system.logging.yml
 
 
 
-revert from overriding files due to a git pull made by mistake
-----------------------------------------------------------------
-
-git checkout <overriding-branch>
-
-git restore <overrided-files>
 
 
 
-error: failed to push some refs to <branch>
----------------------------------------------
 
-git checkout private/malichi/malichi-general
-
-git pull --rebase
-
-git push --set-upstream origin private/malichi/malichi-general
-
-
-
-override a single file from original repo
-----------------------------------------------
-
-git checkout FROM_BRANCH_NAME path/to/file
-
-e.g. git checkout origin /info/general.txt
 
 
 
