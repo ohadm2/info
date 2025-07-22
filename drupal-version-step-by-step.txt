@@ -1,0 +1,143 @@
+
+# 1. commit version files locally [to a new branch] and clean other files (code and configs)
+
+  # drush config-export -y
+  
+  # git checkout -b new-branch-name
+  # git add ...
+  # git commit ....
+  
+  # verify that you committed all of your configs!
+  
+  # remove unwanted untracked files
+  # git ls-files --others --exclude-standard | grep -v Selects_tester.php | xargs rm
+  
+  
+  # checkout the rest of the configs
+  # git ls-files --modified | xargs git checkout --
+  
+  # git status
+  
+  NUM_OF_COMMITS_TO_BACKUP=2
+
+# 2. save backups (db, local configs, untracked files, all files from latest commits):
+  
+  SITE_PROJECT_HOST_FULL_PATH=/var/www/site-d10
+  PROJECT_NAME=link-to-json
+
+  DATE_TO_WORK_WITH=$(date +"%d-%m-%y")
+  BACKUP_DIR=~/backups/d10/${PROJECT_NAME}-${DATE_TO_WORK_WITH}
+  
+  mkdir -vp $BACKUP_DIR/db
+  cd ${SITE_PROJECT_HOST_FULL_PATH}
+  drush sql-dump --result-file=$BACKUP_DIR/db/drupal_10_db-${DATE_TO_WORK_WITH}.sql
+
+  mkdir -vp $BACKUP_DIR/config/local
+  cd ${SITE_PROJECT_HOST_FULL_PATH}
+  drush config-export --destination=$BACKUP_DIR/config/local -y
+
+  mkdir -vp $BACKUP_DIR/untracked
+  cd ${SITE_PROJECT_HOST_FULL_PATH}
+  git ls-files --others --exclude-standard | xargs -I {} cp -v --parents {} $BACKUP_DIR/untracked
+
+  mkdir -vp $BACKUP_DIR/code
+  
+  cd ${SITE_PROJECT_HOST_FULL_PATH}
+  git ls-files --modified | xargs -I {} cp -v --parents {} $BACKUP_DIR/code
+  
+  cd ${SITE_PROJECT_HOST_FULL_PATH}
+# git --no-pager diff --name-only HEAD~${NUM_OF_COMMITS_TO_BACKUP}..HEAD
+  git --no-pager diff --name-only HEAD~${NUM_OF_COMMITS_TO_BACKUP}..HEAD | xargs -I {} cp -v --parents {} $BACKUP_DIR/code
+# find $BACKUP_DIR/code
+
+  nautilus ${BACKUP_DIR}
+
+# 3. pull and merge with main
+
+  git checkout main
+  git pull origin main
+
+  git checkout dynamic_schema_content_type
+  git status
+
+  git merge main
+  
+  # fix conflicts ...
+
+# 4. backup latest remote config (from git) - if needed (e.g. if there are many changes compared to your branch)
+
+  mkdir -vp $BACKUP_DIR/config/remote
+  cd $BACKUP_DIR/config/remote
+  cp -vr /var/www/site-d10/sites/default/config/sync/* .
+  
+# 5. export local config on top of remote config (to make sure your current config will be kept)
+
+  drush config-export -y
+
+# 6. restore remote config on top of local config (to align your configs with latest version)
+
+  git status | grep "modified:\|deleted:" | awk '{print $2}' | xargs git checkout
+
+# 7. deploy the merged configs (updatedb & import)
+
+  drush deploy -y
+
+# 8. fix config files conflicts + commit + push the changes
+
+  # git checkout core.extension.yml # if needed
+  
+  # git add ...
+  # git commit -m "fixed conflicts" 
+  # git push
+  
+# 9. check the version ...
+  
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
