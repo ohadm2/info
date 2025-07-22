@@ -1,0 +1,79 @@
+
+* ERROR: 404 page not found
+
+  Meaning: traefik found a correct route but the service is down
+  
+  Fix: Run the docker image of the relevant service (service=the image block definition in composer)...
+
+
+* ERROR: Gateway Timeout
+
+  Meaning: traefik did not find a valid route
+  
+  Fix: This would probably happen because the network that the service we want traefik to handle by assigning it a URL using the 'host' label is NOT KNOWN to traefik.
+  
+  To fix this problem we need to make traefik aware of the other network.
+  
+  An easy fix is to simply add the network using the following docker cmd: docker network connect "$NEW_NETWORK_NAME" "$TRAEFIK_CONTAINER"
+  
+  By default, traefik will be aware of the network it runs in and the problem starts only if another service is defined in another different network and we want traefik to handle access to it (as described above).
+  
+  So when we need traefik to recognize more than one network, we must use the "networks:" general level section in docker-composer along with the "networks:" service level section like so:
+  
+  traefik:
+    image: traefik:$TRAEFIK_TAG
+    container_name: "traefik"
+    command: --api.insecure=true --providers.docker
+    restart: "always"
+    ports:
+    - '80:80'
+    - '8080:8080'
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - dockers_default
+      - create-test-env_default
+      
+  networks:
+    dockers_default:
+        name: dockers_default
+        external: false
+    create-test-env_default:
+      name: create-test-env_default
+      external: true
+      
+
+* ERROR: Router defined multiple times with different configurations
+
+  Meaning: traefik has different configurations under a single 'router' definition.
+  
+  Fix: Router lines must be unique. look inside all of your 'traefik.http.routers...' definitions. The word AFTER 'routers' is the name of this router and it MUST be unique. Make sure that all your routers lines have unique names.
+  
+  
+
+* Multiple hosts for the same container:
+
+  d7-nginx:
+    image: webdevops/nginx:alpine
+    container_name: "${PROJECT_NAME}_nginx"
+    restart: "always"
+    hostname: ${PROJECT_BASE_URL}
+    depends_on:
+    - d7-php
+    environment:
+      WEB_PHP_SOCKET: d7-php:9000
+      WEB_DOCUMENT_ROOT: /var/www/html
+    volumes:
+    - ./..:/var/www/html:cached
+    labels:
+    - "traefik.http.routers.${PROJECT_NAME}_nginx.rule=Host(`${PROJECT_BASE_URL}`)"
+    - "traefik.http.routers.${PROJECT_NAME}_nginx_alt.rule=Host(`dev.newgov.gov.il`)"
+    - "traefik.http.routers.${PROJECT_NAME}_nginx_alt.service=${PROJECT_NAME}_nginx"
+    - "traefik.http.services.d7_nginx.loadbalancer.server.port=80"
+
+
+
+
+
+      
+      

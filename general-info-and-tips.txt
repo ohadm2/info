@@ -1,0 +1,101 @@
+* a good screenshot program (available via apt): flameshot
+
+  -> another good one is: ksnip.
+
+* a nice simple gui based rest client (available via snap) - restfox
+
+* if the container listens to port 8080 in its inner web app, use the following:
+
+"traefik.http.services.links.loadbalancer.server.port=8080"
+
+meaning the port should be the INNER container port and that will cause traefik to route data from its main port listened by the host as well (port 80) to the inner app port making it possible for address based accessing only via hot browser.
+
+    -> also - this DOES NOT affect the port redirect on docker level so that can be set in parallel given the the source ports are different ...
+        -> HOWEVER - when mixing traefik with that docker port mappings, one MUST config a 'loadbalancer' line as shown below as well
+    
+    -> e.g.:
+    
+          swagger-ui:
+            build:
+              context: .
+              dockerfile: swagger-ui.dockerfile
+            container_name: swagger-ui
+            restart: "always"
+            ports:
+            - '9292:8080'
+            labels:
+            - "traefik.http.services.swagger-ui.loadbalancer.server.port=8080"
+            - "traefik.http.routers.swagger-ui.rule=Host(`swagger-ui.dev.gov.il`)"
+            
+            
+* after changing netwoking settings in docker compose - refresh the network by running a 'docker compose down' command.
+
+
+
+* GRAPHIC PROGRAMS IN DOCKER: For Docker, mount the host's X11 socket in the container with -v /tmp/.X11-unix:/tmp/.X11-unix and ensure the DISPLAY env var is set correctly.
+
+
+
+* History setup in .bashrc for log unity across all terminal windows:
+
+export HISTCONTROL=ignoredups
+export HISTFILE=~/.bash_history
+
+shopt -s histappend
+
+on each cmd append new cmd to the file on the fs by adding the following line to .bashrc:
+
+PROMPT_COMMAND="history -a"
+
+at the end of the .bashrc script, run the following cmd to load the last version of the history file into the current shell window:
+
+history -r
+
+
+* Get all other history into an already opened window: 
+
+history -r
+
+IMPORTANT: be sure to test this setup on 2 BRAND NEW shell windows or run source ~/.bashrc before testing (otherwise the PROMPT_COMMAND won't load ..)
+
+
+* git user can be defined via env vars like so:
+
+  export GIT_USER_NAME=wodby
+  export GIT_USER_EMAIL=wodby@example.com
+
+
+* one can use globing in dockerfile copy cmd for a conditional copy!
+
+    e.g.: COPY git-user-dat[a].sh /home/wodby
+    
+    this method will NOT fail the build if such a file does not exist.
+
+
+* sudo apt install xca - install a ui for viewing certificates in ubuntu
+
+
+* allow /etc/hosts records to be served as dns records (for managing cookies for example)
+
+  sudo -E gedit /etc/systemd/resolved.conf
+   
+  uncomment ReadEtcHosts=yes
+   
+  sudo systemctl restart systemd-resolved
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
