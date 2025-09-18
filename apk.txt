@@ -1,0 +1,26 @@
+🛠️ Work on Already Installed Packages
+# Reinstall a package (similar to dpkg-reconfigure)
+apk fix <pkg_name>
+
+# List files installed by a package
+apk info -L <pkg_name>
+
+# Find what package a file belongs to
+apk info --who-owns /path/to/file
+
+# List all installed packages
+apk info
+
+📦 Work on Local .apk Files
+# List files inside a local .apk package
+tar -tzf ./package.apk
+
+# Install a local .apk package
+apk add ./package.apk
+
+🌐 Work with Remote Repository Packages
+# Search for packages that provide a particular file
+apk search --who-owns filename
+
+# List files in a remote package (must be installed or downloaded manually to inspect)
+apk info -L <pkg_name>
