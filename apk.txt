@@ -11,16 +11,14 @@ find /lib/apk/db/installed -type f -exec grep -l '/path/to/file' {} +
 # List all installed packages
 apk info
 📦 Work on Local .apk Files
-sh
-Copy code
+
 # List files inside a local .apk package
 tar -tzf ./package.apk
 
 # Install a local .apk package
 apk add --allow-untrusted ./package.apk
 🌐 Work with Remote Repository Packages
-sh
-Copy code
+
 # Search for packages by name
 apk search <pattern>
 
