@@ -1,26 +1,28 @@
-🛠️ Work on Already Installed Packages
-# Reinstall a package (similar to dpkg-reconfigure)
+# Reinstall a broken package (similar to dpkg-reconfigure)
 apk fix <pkg_name>
 
 # List files installed by a package
 apk info -L <pkg_name>
 
-# Find what package a file belongs to
-apk info --who-owns /path/to/file
+# Find what package owns a given file
+# (NOTE: No direct apk option; use this workaround)
+find /lib/apk/db/installed -type f -exec grep -l '/path/to/file' {} +
 
 # List all installed packages
 apk info
-
 📦 Work on Local .apk Files
+sh
+Copy code
 # List files inside a local .apk package
 tar -tzf ./package.apk
 
 # Install a local .apk package
-apk add ./package.apk
-
+apk add --allow-untrusted ./package.apk
 🌐 Work with Remote Repository Packages
-# Search for packages that provide a particular file
-apk search --who-owns filename
+sh
+Copy code
+# Search for packages by name
+apk search <pattern>
 
-# List files in a remote package (must be installed or downloaded manually to inspect)
+# List files in a remote package (must install it first)
 apk info -L <pkg_name>
