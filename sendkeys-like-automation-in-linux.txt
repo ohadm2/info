@@ -1,0 +1,68 @@
+xdotool search --onlyvisible --name ".*" | xargs -I {} xprop -id {} | grep "WM_NAME(STRING)"
+
+xdotool search --onlyvisible --name ".*" | xargs -I {} bash -c "printf {}: ; xprop -id {} | grep \"WM_NAME(STRING)\" ; echo" | xargs -I {} echo {} | grep NAME | tr -d "=" | sed "s/:WM_NAME(STRING)//"
+
+
+xdotool search --onlyvisible --name "Chrome"
+
+
+xdotool windowfocus --sync 69206026 && xdotool type --window 69206026 "Hello, World!"
+
+
+xdotool search --onlyvisible --name "google" getwindowname
+
+
+
+
+user@laptop:~/scripts$ ./get-mouse-click-location.sh 
+Click the mouse to get the coordinates
+X=244
+Y=1079
+
+
+
+# Move the mouse to the specified coordinates
+xdotool mousemove $x $y
+
+# Click at the current mouse location
+xdotool click 1
+
+# Type the specified text
+xdotool type "$text"
+
+
+
+
+
+xdotool windowfocus --sync 81788932 && xdotool mousemove --window 81788932 244 1079 && xdotool click 1 && xdotool type --window 81788932 "maagar-test-1"
+
+
+xdotool mousemove --window 81788932 244 1079 && xdotool click 1 && xdotool type --window 81788932 "maagar-test-1"
+
+
+
+
+x:268 y:497 screen:0 window:81789523
+x:135 y:622 screen:0 window:81789523
+
+x:496 y:446 screen:0 window:81789523
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
