@@ -1,0 +1,31 @@
+
+
+
+docker run --env RUN_XTERM=no -p 8080:8080 --rm -d --name=gui theasp/novnc
+
+docker run --env DISPLAY=172.17.0.4:0.0 -it alpine ash
+
+
+apk add git-gitk
+apk add font-noto
+
+
+
+
+
+
+echo docker run --env DISPLAY=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' gui):0.0 -it alpine ash
+
+docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' my_container
+
+
+
+
+docker run --env RUN_XTERM=no -p 8080:8080 --rm -d --name=gui theasp/novnc
+docker run --env DISPLAY=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' gui):0.0 -it alpine ash
+
+
+
+
+start a browser @ http://localhost:8080/vnc.html
+hit 'connect'
