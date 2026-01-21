@@ -1,0 +1,51 @@
+echo "=== ALTERNATIVE CONTAINER RUNTIME CHECK ===" && sudo crictl ps 2>/dev/null || echo "crictl not found" && echo "=== PODMAN CHECK ===" && podman ps 2>/dev/null || echo "podman not found" && echo "=== KIND VERSION & LOCATION ===" && which kind && kind version && echo "=== DOCKER HOST ===" && echo $DOCKER_HOST && echo "=== KIND CONFIG ===" && ls -la ~/.kind/ 2>/dev/null || echo "No .kind directory"
+
+
+echo "=== SEARCH ALL CONTAINERS BY KIND NAME ===" && sudo docker ps -a --filter "name=k8s-dev" && echo "=== SEARCH BY KIND IMAGE ===" && sudo docker ps -a --filter "ancestor=kindest/node" && echo "=== CHECK IF ROOT OWNS KIND CONTAINERS ===" && sudo docker ps -a | grep -i kind && echo "=== NETWORK ROUTE TO CLUSTER ===" && ip route get 172.30.0.1 && echo "=== CHECK FOR KIND IN DIFFERENT LOCATION ===" && find /usr -name "kind" 2>/dev/null && echo "=== CHECK KIND LOGS ===" && sudo journalctl -u docker | grep -i kind | tail -5
+
+
+echo "=== NETWORK ROUTE TO CLUSTER ===" && ip route get 172.30.0.1 && echo "=== NETWORK INTERFACES ===" && ip addr | grep -A3 -B1 172.30 && echo "=== CHECK FOR VMs ===" && ps aux | grep -i qemu && echo "=== CHECK FOR NESTED DOCKER ===" && ps aux | grep dockerd | wc -l && echo "=== CHECK CGROUPS ===" && systemctl list-units | grep -i kube && echo "=== CHECK FOR K3S/MICROK8S ===" && which k3s microk8s 2>/dev/null || echo "Not found"
+
+
+echo "=== DOCKER PROCESSES DETAILS ===" && ps aux | grep dockerd && echo "=== DOCKER SOCKETS ===" && ls -la /var/run/docker* && echo "=== BRIDGE NETWORK DETAILS ===" && sudo docker network inspect $(sudo docker network ls | grep br-19609e73f1bc | awk '{print $1}') 2>/dev/null || echo "Bridge not visible" && echo "=== CHECK CONTAINERS ON BRIDGE ===" && sudo docker ps --format "table {{.Names}}\t{{.Networks}}" && echo "=== ALTERNATIVE DOCKER SOCKET ===" && sudo DOCKER_HOST=unix:///var/run/docker.sock docker ps
+
+
+echo "=== CHECK SNAP DOCKER ===" && sudo snap run docker ps 2>/dev/null || echo "Snap docker command failed" && echo "=== CHECK SNAP DOCKER NETWORKS ===" && sudo snap run docker network ls 2>/dev/null || echo "Snap docker networks failed" && echo "=== TRY DOCKER CONTEXT FOR SNAP ===" && sudo DOCKER_HOST=unix:///var/snap/docker/current/run/docker.sock docker ps 2>/dev/null || echo "Snap socket failed" && echo "=== CHECK IF KIND USED SNAP DOCKER ===" && sudo snap run docker ps --filter "name=k8s-dev" 2>/dev/null || echo "No snap containers found"
+
+
+echo "=== KIND CLUSTERS ===" && kind get clusters && echo "=== DOCKER PS (SUDO) ===" && sudo docker ps && echo "=== DOCKER CONTEXTS ===" && docker context ls && echo "=== KIND NODES ===" && kind get nodes && echo "=== DOCKER STATUS ===" && sudo systemctl status docker --no-pager -l
+
+
+
+echo "=== TESTING CLUSTER CONNECTIVITY ===" && timeout 5 kubectl get nodes -v=6 2>&1 && echo "=== CHECKING IF IP IS REACHABLE ===" && timeout 3 nc -zv 172.30.0.1 6443 2>&1 || echo "Connection failed" && echo "=== KUBECONFIG CONTENT ===" && kubectl config view --minify
+
+
+echo "=== STOPPED CONTAINERS ===" && sudo docker ps -a && echo "=== DOCKER NETWORKS ===" && sudo docker network ls && echo "=== KIND NETWORK DETAILS ===" && sudo docker network inspect kind 2>/dev/null || echo "No kind network" && echo "=== CONTAINER PROCESSES ===" && sudo docker container ls --all --format "table {{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Names}}"
+
+
+echo "=== KUBECTL CONTEXT ===" && kubectl config current-context && echo "=== KUBECTL CLUSTER INFO ===" && kubectl cluster-info && echo "=== KUBECTL CONFIG ===" && kubectl config get-contexts && echo "=== KUBECONFIG FILE ===" && echo $KUBECONFIG
+
+
+echo "=== STOP DOCKER ===" && sudo systemctl stop docker docker.socket && echo "=== CHECK DOCKER PROCESSES ===" && ps aux | grep dockerd && echo "=== CLEAN DOCKER STATE ===" && sudo pkill dockerd 2>/dev/null; sleep 2 && echo "=== RESTART DOCKER ===" && sudo systemctl start docker && echo "=== CHECK SOCKET CREATION ===" && ls -la /var/run/docker.sock && echo "=== TEST DOCKER ===" && docker ps
+
+
+echo "=== ADD USER TO DOCKER GROUP ===" && sudo usermod -aG docker $USER && echo "=== REFRESH GROUPS ===" && newgrp docker && echo "=== TEST DOCKER ACCESS ===" && docker ps
+
+
+echo "=== CHECK DOCKER SOCKET PERMS ===" && ls -la /var/run/docker.sock && echo "=== FIX SOCKET PERMS ===" && sudo chmod 666 /var/run/docker.sock && echo "=== TEST DOCKER ===" && docker ps && echo "=== RESTORE SOCKET PERMS ===" && sudo chmod 660 /var/run/docker.sock && sudo chgrp docker /var/run/docker.sock
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
